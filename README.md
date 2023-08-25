@@ -6,9 +6,9 @@ In future versions (most likely outside of the Austin Coding Academy Capstone), 
 
 ## JS311 Checkpoint 2
 
--- Include all the routes you plan to support and what the expected input and output of each route is.
--- I'm organizing these by database table, rather than by endpoint.
--- I will decide whether I want to implement PUT or PATCH requests later, tentatively using PUT.
+- Include all the routes you plan to support and what the expected input and output of each route is.
+- I'm organizing these by database table, rather than by endpoint.
+- I will decide whether I want to implement PUT or PATCH requests later, tentatively using PUT.
 
 ### warehouses:
 
