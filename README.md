@@ -2,26 +2,46 @@
 
 This application is an order management system that creates shipping labels from the Shipengine API.
 
-## 311 Checkpoint 2
+In future versions (likely outside of the Austin Coding Academy Capstone), I intend write marketplace integrations starting with ShipStation's openAPI and Custom Store methods, followed by Shopify or Amazon. I will also be writing native carrier integrations starting with FedEx because I know they have an easily accessible Dev environment.
 
-Include all the routes you plan to support and what the expected input and output of each route is.
+## JS311 Checkpoint 2
 
-For example:
+-- Include all the routes you plan to support and what the expected input and output of each route is.
+-- I'm roughly organizing these by database table, rather than by endpoint.
 
-- GET /recipes - This route returns an array of recipe objects that hold the id, name and description of each recipe. This route does not need any input
+### warehouses:
 
-- GET /recipes/:recipeId - This route returns a single recipe object that includes all the details of a recipe including the list of ingredients and instructions. This route takes in the recipe id as a path parameter.
+Warehouse objects hold address information for the location(s) a user ships packages from
 
-### ship_from:
+- GET /warehouses - returns an array of existing warehouse addresses on the account.
+- GET /warehouses/:id - retrieve 1 warehouse address by its ID.
+- POST /warehouses - create a warehouse object.
+- PUT /warehouses/:id - update a warehouse object.
 
-These object hold address information for a CloneStation user's ship from locations.
+### customers:
 
-- GET /shipfrom - returns an array of existing ship_from addresses on the account.
-- GET /shipfrom/:id - retrieve 1 ship from address by its ID.
-- POST /shipfrom - create a ship_from object.
-- PUT /shipfrom - update a ship_from object.
+- GET /
+- POST /
+- PUT /
+
+  - - ship_to will be another route from this endpoint
+  - - customers can have multiple ship_to addresses
+
+- GET /
+- POST /
+- PUT /
+
+### products:
+
+- GET /products
+- POST /products
+- PUT /products
+  -- order_items interacts with products.
+  -- I'm not sure if that should be another route
 
 ### orders:
+
+The interaction of orders and shipments is a bit more complex, and will not be implemented for this Checkpoint assignment. The data layer will require requests to ShipEngine's API, so I will be working on these last.
 
 - GET /orders - return an array of orders (default size = 100)
 - GET /orders?size=500 - query param allowing you to change the size returned.
@@ -39,25 +59,5 @@ We can delete (void label), but cannot update shipments after they have been cre
 - GET /shipments - return an array of shipments (default size = 100)
 - POST /orders/createshipment - create a shipment from an order object
 - DELETE / - void the label and delete the shipment object.
-
-### customers:
-
-- GET /
-- POST /
-- PUT /
-  -- ship_to will be another route from this endpoint
-  -- customers can have multiple ship_to addresses
-
-- GET /
-- POST /
-- PUT /
-
-### products:
-
-- GET /products
-- POST /products
-- PUT /products
-  -- order_items interacts with products.
-  -- I'm not sure if that should be another route
 
 this covers interacting with all tables from my API
