@@ -23,10 +23,8 @@ Warehouse objects hold address information for the location(s) a user ships pack
 - GET /
 - POST /
 - PUT /
-
-  - - ship_to will be another route from this endpoint
-  - - customers can have multiple ship_to addresses
-
+  - ship_to will be another route from this endpoint
+  - customers can have multiple ship_to addresses
 - GET /
 - POST /
 - PUT /
