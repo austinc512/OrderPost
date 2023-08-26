@@ -53,6 +53,10 @@ for now, only implementing routes, no auth. just know for later
 let productRoutes = require("./routes/productRoutes");
 app.use("/products", productRoutes);
 
+// use customers endpoint
+let customerRoutes = require("./routes/customerRoutes");
+app.use("/customers", customerRoutes);
+
 app.listen(port, () => {
   console.log(`Web server is listening on port ${port}!`);
 });
