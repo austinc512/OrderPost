@@ -54,7 +54,7 @@ const createProduct = (req, res) => {
     !req.body.price ||
     !req.body.description
   ) {
-    console.log("A falsy value was sent in request body");
+    console.log("A falsy value was sent in the createProduct request body");
     res
       .status(400)
       .json("A required property in the request has a falsy value");
@@ -94,7 +94,7 @@ const createProduct = (req, res) => {
   let sql =
     "INSERT into OrderPost_products (product_name, price, description) VALUES (?, ?, ?)";
 
-  db.query(sql, params, (err, rows) => {
+  db.query(sql, params, (err, dbResponse) => {
     if (err) {
       console.log(`insert into OrderPost_products failed:`);
       console.log(err);
@@ -108,8 +108,8 @@ const createProduct = (req, res) => {
       }
     } else {
       console.log(`insert into OrderPost_products succeeded:`);
-      console.log(rows);
-      return res.json(rows);
+      console.log(dbResponse);
+      return res.json(dbResponse);
     }
   });
 };

@@ -26,7 +26,7 @@ Warehouse objects hold address information for the location(s) a user ships pack
 - GET /customers?size={size} - query param allowing you to change the size returned (max size = 500).
 - GET /customers/:customerId - retrieve 1 existing customer object by its customerId.
 - POST /customers - pass in customer information to create a customer object. This creates and returns a new customerId.
-- PUT /customers/:customerId - update an existing customer object.
+- PATCH /customers/:customerId - update an existing customer object.
 - DELETE /customers/:customerId - delete an existing customer object.
 
 There are many other query parameters I could implement on the customers endpoint, for example a 'starts-with' search. Further query structures will be implemented in later iterations.
