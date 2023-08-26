@@ -13,14 +13,15 @@ DROP TABLE IF EXISTS OrderPost_ship_to;
 
 DROP TABLE IF EXISTS OrderPost_order_items;
 DROP TABLE IF EXISTS OrderPost_products;
-DROP TABLE IF EXISTS OrderPost_orders;
+
 DROP TABLE IF EXISTS OrderPost_shipments;
+DROP TABLE IF EXISTS OrderPost_orders;
 DROP TABLE IF EXISTS OrderPost_customers;
 
 DROP TABLE IF EXISTS OrderPost_warehouses; -- needs to be last I think
 
 CREATE TABLE OrderPost_customers (
-    id INT PRIMARY KEY auto_increment,
+    customer_id INT PRIMARY KEY auto_increment,
     first_name VARCHAR (40),
     last_name VARCHAR (40),
     phone VARCHAR(15),
@@ -28,7 +29,7 @@ CREATE TABLE OrderPost_customers (
 );
 
 CREATE TABLE OrderPost_ship_to (
-    id INT PRIMARY KEY auto_increment,
+    ship_to_id INT PRIMARY KEY auto_increment,
     customer_id INT,
     first_name VARCHAR (40),
     last_name VARCHAR (40),
@@ -44,12 +45,12 @@ CREATE TABLE OrderPost_ship_to (
     country_code VARCHAR (10),
     address_residential_indicator BOOLEAN,
     FOREIGN KEY (customer_id) 
-    REFERENCES OrderPost_customers (id)
+    REFERENCES OrderPost_customers (customer_id)
     ON DELETE CASCADE
 );
 
 CREATE TABLE OrderPost_warehouses (
-    id INT PRIMARY KEY auto_increment,
+    warehouse_id INT PRIMARY KEY auto_increment,
     first_name VARCHAR (40),
     last_name VARCHAR (40),
     nick_name VARCHAR (20),
@@ -65,6 +66,16 @@ CREATE TABLE OrderPost_warehouses (
     country_code VARCHAR (10),
     address_residential_indicator BOOLEAN
 );
+
+CREATE TABLE OrderPost_products (
+    product_id INT PRIMARY KEY auto_increment,
+    product_name VARCHAR (30),
+    price DECIMAL (10,2),
+    description VARCHAR (150),
+    UNIQUE (product_name)
+);
+
+-- we're here with table creation
 
 CREATE TABLE OrderPost_orders (
     order_id INT PRIMARY KEY auto_increment,
@@ -88,23 +99,17 @@ CREATE TABLE OrderPost_orders (
     dimension_units VARCHAR (5),
     warehouses_id INT,
     FOREIGN KEY (warehouses_id)
-    REFERENCES OrderPost_warehouses (id)
+    REFERENCES OrderPost_warehouses (warehouse_id)
     ON DELETE CASCADE,
         -- (M,D) means than values can be stored with up to M digits in total, of which D digits may be after the decimal point
      FOREIGN KEY (customer_id) 
-     REFERENCES OrderPost_customers (id)
+     REFERENCES OrderPost_customers (customer_id)
      ON DELETE CASCADE
 );
 
 -- re-testing comment
 
-CREATE TABLE OrderPost_products (
-    product_id INT PRIMARY KEY auto_increment,
-    product_name VARCHAR (30),
-    price DECIMAL (10,2),
-    description VARCHAR (150),
-    UNIQUE (product_name)
-);
+
     -- current instance of DB had unique altered. this could fail.
 
 CREATE TABLE OrderPost_order_items (

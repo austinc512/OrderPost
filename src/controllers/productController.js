@@ -27,9 +27,12 @@ const listProducts = (req, res) => {
 
   db.query(queryString, (err, rows) => {
     if (err) {
-      console.log("listProducts query failed, ", err);
+      console.log("listProducts query failed:");
+      console.log(err);
       res.sendStatus(500); // it's the server's fault
     } else {
+      console.log("listProducts query succeeded:");
+      console.log(rows);
       return res.json(rows);
     }
   });
@@ -51,7 +54,10 @@ const createProduct = (req, res) => {
     !req.body.price ||
     !req.body.description
   ) {
-    res.sendStatus(400);
+    console.log("A falsy value was sent in request body");
+    res
+      .status(400)
+      .json("A required property in the request has a falsy value");
     return;
   }
 
@@ -90,7 +96,8 @@ const createProduct = (req, res) => {
 
   db.query(sql, params, (err, rows) => {
     if (err) {
-      console.log(`insert into OrderPost_products failed, err`, err);
+      console.log(`insert into OrderPost_products failed:`);
+      console.log(err);
       console.log(err.code);
       if (err.code == "ER_DUP_ENTRY") {
         res.status(400).json(`not a unique product name`);
@@ -100,32 +107,31 @@ const createProduct = (req, res) => {
         return;
       }
     } else {
+      console.log(`insert into OrderPost_products succeeded:`);
+      console.log(rows);
       return res.json(rows);
-      //   return res.status(200).json("looks good");
     }
   });
-
-  //   res.json(`inside POST products`);
 };
 
 const getProductById = (req, res) => {
-  //   console.log(req.params.productId);
   const productId = [req.params.productId];
   let sql = "SELECT * FROM OrderPost_products WHERE product_id = ?";
   db.query(sql, productId, (err, rows) => {
     if (err) {
-      console.log(`SELECT from OrderPost_products by ID failed, err`, err);
+      console.log(`SELECT from OrderPost_products by ID failed:`);
+      console.log(err);
     } else {
       if (rows.length === 0) {
         res.status(400).json(`There are no products with this ID`);
         return;
       } else {
+        console.log(`SELECT from OrderPost_products by ID was successful:`);
+        console.log(rows);
         res.json(rows[0]);
       }
     }
   });
-
-  //   res.json(`inside GET products by ID`);
 };
 
 const updateProduct = (req, res) => {
@@ -162,6 +168,7 @@ const updateProduct = (req, res) => {
   params.push(productId);
   db.query(sql, params, (err, dbResponse) => {
     if (err) {
+      console.log("an error occurred:");
       console.log(err);
       if (err.code == "ER_DUP_ENTRY") {
         res.status(400).json(`Sorry, that product name is already reserved.`);
@@ -183,12 +190,11 @@ const deleteProduct = (req, res) => {
 
   db.query(sql, param, (err, dbRes) => {
     if (err) {
-      console.log("error in delete statment", err);
+      console.log("error in delete statment");
+      console.log(err);
       res.status(500).json(`something went wrong`);
       return;
     } else {
-      //   console.log(dbRes);
-      //   console.log(dbRes.affectedRows);
       if (dbRes.affectedRows == 0) {
         console.log(`${productId} is not a valid productId to delete`);
         res.status(400).json(`not a valid productId`);
