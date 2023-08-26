@@ -8,7 +8,7 @@ In future versions (most likely outside of the Austin Coding Academy Capstone), 
 
 - Include all the routes you plan to support and what the expected input and output of each route is.
 - I'm organizing these by database table, rather than by endpoint.
-- I will decide whether I want to implement PUT or PATCH requests later, tentatively using PUT.
+- I may go back on this decision later, but tentatively I'm implementing PATCH requests instead of PUT requests for updating objects.
 
 ### warehouses:
 
@@ -39,17 +39,15 @@ One customers can have multiple ship-to addresses. In other words, the OrderPost
 
 - GET /customers/:customerId/addresses - returns an array of existing ship-to addresses for a customerId.
 - POST /customers/:customerId/addresses - pass in address information to create a ship-to object for that customerId.
-- GET /customers/:customerId/addresses/:addressId - returns a single ship-to object by its addressId
+- GET /customers/:customerId/addresses/:addressId - returns a single ship-to object by its addressId.
 
 ### products:
 
 - GET /products - returns an array of existing products on the account (default size = 100).
 - GET /products?size={size} - returns an array of existing products on the account (max size = 500).
 - GET /products/:productId - get a specific product by its productId
-- POST /products - create a new product object
-- PUT /products
-  - order_items interacts with products.
-  - I'm not sure if that should be another route
+- POST /products - create a new product object.
+- PATCH /products/:productId - update an existing product.
 
 ### orders:
 

@@ -1,4 +1,3 @@
-const mysql = require("mysql");
 const db = require("../sql/db");
 
 const listProducts = (req, res) => {
@@ -129,8 +128,87 @@ const getProductById = (req, res) => {
   //   res.json(`inside GET products by ID`);
 };
 
+const updateProduct = (req, res) => {
+  /*
+    Looking for any of the three:
+    {
+        "product_name": "Test Product API 1",
+        "price": 10.99,
+        "description": "Description must be less than 150 characters."
+    }
+  */
+  const productId = +req.params.productId;
+  let { product_name, price, description } = req.body;
+  let sql = "UPDATE OrderPost_products SET ";
+  const params = [];
+  // if data is formatted correctly, append to SQL string.
+  if (product_name && typeof product_name == "string") {
+    sql += "product_name = ?, ";
+    params.push(product_name);
+  }
+  //coerce price to number type (in case string is sent)
+  price = +price;
+  if (price && typeof price == "number") {
+    sql += "price = ?, ";
+    params.push(price);
+  }
+  if (description && typeof description == "string") {
+    sql += "description = ? ";
+    params.push(description);
+  }
+
+  // after adding updated columns, finish off SQL query
+  sql += "WHERE product_id = ?";
+  params.push(productId);
+  db.query(sql, params, (err, dbResponse) => {
+    if (err) {
+      console.log(err);
+      if (err.code == "ER_DUP_ENTRY") {
+        res.status(400).json(`Sorry, that product name is already reserved.`);
+        return;
+      }
+      res.status(500).json(`somthing went wrong`);
+      return;
+    } else {
+      console.log(dbResponse);
+      res.json(`Product updated!!`);
+    }
+  });
+};
+
+const deleteProduct = (req, res) => {
+  const productId = [req.params.productId];
+  let sql = "DELETE FROM OrderPost_products where product_id = ?";
+  let param = productId;
+
+  db.query(sql, param, (err, dbRes) => {
+    if (err) {
+      console.log("error in delete statment", err);
+      res.status(500).json(`something went wrong`);
+      return;
+    } else {
+      //   console.log(dbRes);
+      //   console.log(dbRes.affectedRows);
+      if (dbRes.affectedRows == 0) {
+        console.log(`${productId} is not a valid productId to delete`);
+        res.status(400).json(`not a valid productId`);
+      } else {
+        console.log(`productId ${productId} deleted successfully`);
+        res.json(`delete successful. Hope you don't regret it!!`);
+        return;
+      }
+    }
+  });
+};
+
 // using db.query when reading data
 // using db.querySync when Inserting into db
 // functions using querySync need to be marked async
 
-module.exports = { listProducts, createProduct, getProductById };
+module.exports = {
+  listProducts,
+  createProduct,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+};
