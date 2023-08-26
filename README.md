@@ -45,10 +45,11 @@ One customers can have multiple ship-to addresses. In other words, the OrderPost
 
 - GET /products - returns an array of existing products on the account (default size = 100).
 - GET /products?size={size} - returns an array of existing products on the account (max size = 500).
-- POST /products
+- GET /products/:productId - get a specific product by its productId
+- POST /products - create a new product object
 - PUT /products
-  -- order_items interacts with products.
-  -- I'm not sure if that should be another route
+  - order_items interacts with products.
+  - I'm not sure if that should be another route
 
 ### orders:
 

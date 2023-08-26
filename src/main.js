@@ -49,6 +49,7 @@ for now, only implementing routes, no auth. just know for later
 
 */
 
+// already on the products endpoint
 let productRoutes = require("./routes/productRoutes");
 app.use("/products", productRoutes);
 

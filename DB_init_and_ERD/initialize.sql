@@ -102,8 +102,10 @@ CREATE TABLE OrderPost_products (
     product_id INT PRIMARY KEY auto_increment,
     product_name VARCHAR (30),
     price DECIMAL (10,2),
-    description VARCHAR (150)
+    description VARCHAR (150),
+    UNIQUE (product_name)
 );
+    -- current instance of DB had unique altered. this could fail.
 
 CREATE TABLE OrderPost_order_items (
     order_item_id INT PRIMARY KEY auto_increment,
