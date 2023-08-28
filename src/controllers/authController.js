@@ -112,10 +112,19 @@ sign the token - we're gonna add salt (secret)
 
 */
 
+/*
+
+{
+    "username": "austinCov1",
+    "password": "doofus99"
+}
+
+*/
+
 let login = (req, res) => {
   const { username, password } = req.body;
   let sql =
-    "select user_id, full_name, password_hash from regUsers where username = ?";
+    "select user_id, first_name, last_name, password_hash from OrderPost_users where username = ?";
   let params = [username];
 
   db.query(sql, params, async (err, rows) => {
@@ -131,13 +140,14 @@ let login = (req, res) => {
       } else if (rows.length == 0) {
         console.log(`not a valid username, ${username}`);
         // could just be username that's incorrect
-        res.sendStatus(400).send(`invalid username`);
+        res.sendStatus(400).json(`invalid username`);
       } else {
         // we have 1 good row
         // it comes back as an arr of an object, so we need rows[0]
         const pwHash = rows[0].password_hash;
-        const fullName = rows[0].full_name;
-        const userId = rows[0].id;
+        const first_name = rows[0].first_name;
+        const last_name = rows[0].last_name;
+        const user_id = rows[0].user_id;
 
         let goodPass = false;
 
@@ -152,8 +162,9 @@ let login = (req, res) => {
         if (goodPass) {
           // send JWT
           let token = {
-            fullname: fullName,
-            userId: userId,
+            firstName: first_name,
+            lastName: last_name,
+            userId: user_id,
           };
           //   res.status(200).send(token);
           // JK, now we need to sign the token
@@ -180,13 +191,7 @@ let login = (req, res) => {
   //   }
 };
 
-let hello = (req, res) => {
-  console.log(`public hello from authController`);
-  res.send(`this is a public hello`);
-};
-
 module.exports = {
-  hello,
   registerUser,
   login,
 };

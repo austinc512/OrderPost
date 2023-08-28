@@ -4,12 +4,22 @@ const customersControllers = require("../controllers/customersController");
 
 const router = express.Router();
 
-router.get("/", customersControllers.listCustomers);
+const auths = require("../middleware/auth");
 
-router.get("/:customerId", customersControllers.getCustomerById);
+router.get("/", auths.checkJWT, customersControllers.listCustomers);
 
-router.post("/", customersControllers.createCustomer);
+router.get(
+  "/:customerId",
+  auths.checkJWT,
+  customersControllers.getCustomerById
+);
 
-router.patch("/:customerId", customersControllers.updateCustomer);
+router.post("/", auths.checkJWT, customersControllers.createCustomer);
+
+router.patch(
+  "/:customerId",
+  auths.checkJWT,
+  customersControllers.updateCustomer
+);
 
 module.exports = router;
