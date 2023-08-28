@@ -17,11 +17,11 @@ we have to do an async/await to these steps
 request:
 
 {
-    "username": "austinCov",
-    "password": "doofus99",
-    "first_name": "Austin"
-    "last_name": "Covey"
-    "email": "austincovey.dev@gmail.com"
+    "username": "string",
+    "password": "string",
+    "first_name": "string"
+    "last_name": "string"
+    "email": "string@gmail.com"
 }
 */
 
@@ -115,8 +115,8 @@ sign the token - we're gonna add salt (secret)
 /*
 
 {
-    "username": "austinCov1",
-    "password": "doofus99"
+    "username": "string",
+    "password": "string"
 }
 
 */
