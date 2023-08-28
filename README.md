@@ -74,6 +74,8 @@ Thoughts and assumptions:
 - Shipping labels can be voided, which will DELETE the shipment object
 - I will not support PUT requests, because a shipment object should be a static record of items from an order object that have an associated tracking number.
 
+Endpoints:
+
 - GET /shipments - return an array of shipments (default size = 100)
 - GET /shipments?size={size} - query param allowing you to change the size returned (max size = 500).
 - POST /orders/createshipment - create a shipment from an order object. This step can only occur after a successful /v1/labels request to the ShipEngine API.

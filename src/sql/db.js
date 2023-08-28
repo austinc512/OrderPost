@@ -58,5 +58,3 @@ connection.querySync = async (sql, params) => {
 // make connection
 
 module.exports = connection;
-
-// make a note: previous project that had a public folder?

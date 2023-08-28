@@ -57,6 +57,9 @@ app.use("/products", productRoutes);
 let customerRoutes = require("./routes/customerRoutes");
 app.use("/customers", customerRoutes);
 
+let customerAuths = require("./routes/authRoutes");
+app.use("/auth", customerAuths);
+
 app.listen(port, () => {
   console.log(`Web server is listening on port ${port}!`);
 });

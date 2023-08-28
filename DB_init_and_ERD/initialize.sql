@@ -17,15 +17,30 @@ DROP TABLE IF EXISTS OrderPost_products;
 DROP TABLE IF EXISTS OrderPost_shipments;
 DROP TABLE IF EXISTS OrderPost_orders;
 DROP TABLE IF EXISTS OrderPost_customers;
+DROP TABLE IF EXISTS OrderPost_users;
 
 DROP TABLE IF EXISTS OrderPost_warehouses; -- needs to be last I think
+
+CREATE TABLE OrderPost_users (
+    user_id INT PRIMARY KEY auto_increment,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(40),
+    last_name VARCHAR(40),
+    email VARCHAR(50) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 CREATE TABLE OrderPost_customers (
     customer_id INT PRIMARY KEY auto_increment,
     first_name VARCHAR (40),
     last_name VARCHAR (40),
     phone VARCHAR(15),
-    email VARCHAR (50)
+    email VARCHAR (50),
+    user_id INT,
+    FOREIGN KEY (user_id) 
+    REFERENCES OrderPost_users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE OrderPost_ship_to (
@@ -155,4 +170,23 @@ CREATE TABLE OrderPost_shipments (
      ON DELETE CASCADE
 );
 
--- adding new comment
+-- I somehow completely forgot that there needs to be a users table
+
+-- CREATE TABLE OrderPost_users (
+--     user_id INT PRIMARY KEY auto_increment,
+--     username VARCHAR(50) NOT NULL,
+--     password VARCHAR(255) NOT NULL,
+--     first_name VARCHAR(40),
+--     last_name VARCHAR(40),
+--     email VARCHAR(50) UNIQUE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- I also will add a reference to users inside the customers table
+
+-- ALTER TABLE OrderPost_customers ADD COLUMN user_id INT;
+
+-- ALTER TABLE OrderPost_customers 
+-- ADD FOREIGN KEY (user_id) REFERENCES OrderPost_users(user_id) 
+-- ON DELETE CASCADE;
