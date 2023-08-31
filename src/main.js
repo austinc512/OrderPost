@@ -50,34 +50,22 @@ for now, only implementing routes, no auth. just know for later
 */
 
 // already on the products endpoint
-let productRoutes = require("./routes/productRoutes");
+const productRoutes = require("./routes/productRoutes");
 app.use("/products", productRoutes);
 
 // use customers endpoint
-let customerRoutes = require("./routes/customerRoutes");
+const customerRoutes = require("./routes/customerRoutes");
 app.use("/customers", customerRoutes);
 
-let authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes");
 app.use("/auth", authRoutes);
 
-let warehouseRoutes = require("./routes/warehouseRoutes");
+const warehouseRoutes = require("./routes/warehouseRoutes");
 app.use("/warehouses", warehouseRoutes);
+
+const orderRoutes = require("./routes/ordersRoutes");
+app.use("/orders", orderRoutes);
 
 app.listen(port, () => {
   console.log(`Web server is listening on port ${port}!`);
 });
-
-/*
-products
-customers
-auth
-warehouses
-
-
-need to do:
-
-/customers/:customerId/addresses
-/orders
-/shipments
-
-*/

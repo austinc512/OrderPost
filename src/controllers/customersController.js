@@ -137,10 +137,47 @@ const deleteCustomer = (req, res) => {
   res.json(`Coming Soon!`);
 };
 
+// ship-to address functions
+
+const getCustomerAddresses = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
+const createCustomerAddress = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
+const getAddressById = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
+const updateAddressById = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
+const deleteAddressById = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
 module.exports = {
   listCustomers,
   getCustomerById,
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  getCustomerAddresses,
+  createCustomerAddress,
+  getAddressById,
+  updateAddressById,
+  deleteAddressById,
 };

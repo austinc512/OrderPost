@@ -17,7 +17,7 @@ Warehouse objects hold address information for the location(s) a user ships pack
 - GET /warehouses - returns an array of existing warehouse addresses on the account.
 - GET /warehouses/:warehouseId - retrieve 1 warehouse address by its warehouseId.
 - POST /warehouses - pass in address information to create a warehouse object. This creates and returns a new warehouseId.
-- PUT /warehouses/:warehouseId - update an existing warehouse object.
+- PATCH /warehouses/:warehouseId - update an existing warehouse object.
 - DELETE /warehouses/:warehouseId - delete an existing warehouse object.
 
 ### customers:
@@ -40,6 +40,8 @@ One customers can have multiple ship-to addresses. In other words, the OrderPost
 - GET /customers/:customerId/addresses - returns an array of existing ship-to addresses for a customerId.
 - POST /customers/:customerId/addresses - pass in address information to create a ship-to object for that customerId.
 - GET /customers/:customerId/addresses/:addressId - returns a single ship-to object by its addressId.
+- PATCH /customers/:customerId/addresses/:addressId - update a ship-to object by its addressId.
+- DELETE /customers/:customerId/addresses/:addressId - update a ship-to object by its addressId.
 
 ### products:
 
@@ -57,13 +59,13 @@ The interaction of orders and shipments is a bit more complex, and likely will n
 - GET /orders?size={size} - query param allowing you to change the size returned (max size = 500).
 - GET /orders/:orderId - get a specific order object by its ID
 - POST /orders - create an order object
-- PUT /orders - update an order object
+- PATCH /orders - update an order object
 
-Deleting order objects will not be supported. There's a column in the orders table named 'order_status', and instead of deleting orders we will set them to a 'cancelled' status.
+Deleting order objects will not be supported. There's a column in the orders table named 'order_status', and instead of deleting orders we will set them to a 'cancelled' status. (this can be done in the PATCH request)
 
 ### order_items:
 
-The order_items table has foreign key relationships to both the products and orders tables. It is an associative table between orders and products. That said, I'm not implementing endpoints specifically for order_items. Instead, order_items are a property of order objects, and will be created/read/updated/deleted by the request bodies sent to the orders endpoint.
+The order_items table has foreign key relationships to both the products and orders tables. It is an associative table between orders and products. That said, I'm not implementing endpoints specifically for order_items. Instead, order_items are a property of order objects, and will be created/read/updated/deleted by the requests sent to the orders endpoint.
 
 ### shipments:
 
@@ -72,14 +74,17 @@ Thoughts and assumptions:
 - Shipment objects are a proxy for 'does this order have a label?'
 - Shipment objects contain recipient, package, and item information.
 - Shipping labels can be voided, which will DELETE the shipment object
-- I will not support PUT requests, because a shipment object should be a static record of items from an order object that have an associated tracking number.
+- I will not support requests to update shipment objects, because a shipment object should be a static record of items from an order object that have an associated tracking number.
 
 Endpoints:
 
 - GET /shipments - return an array of shipments (default size = 100)
 - GET /shipments?size={size} - query param allowing you to change the size returned (max size = 500).
-- POST /orders/createshipment - create a shipment from an order object. This step can only occur after a successful /v1/labels request to the ShipEngine API.
-- DELETE / - void the label and delete the shipment object.
+- POST /orders/:orderId/createshipment - create a shipment from an order object
+  - This step can only occur after a successful /v1/labels request to the ShipEngine API.
+  - Note: this is an action on the Shipments table that occurs on the Orders endpoint.
+- GET /shipments/:shipmentId - get a shipment object by its ID.
+- DELETE /shipments/:shipmentId - void the label and delete the shipment object.
   - The success of this operation depends on the return of a PUT /v1/labels/:label_id/void request to the ShipEngine API.
   - I will need to implement a ShipEngine_label_id column on my shipments table before I can make this work.
     - a potential workaround could be querying ShipEngine by tracking number (returns label_id), then voiding the label. That may not be preferable.

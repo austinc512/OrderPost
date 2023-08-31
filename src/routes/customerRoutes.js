@@ -28,4 +28,37 @@ router.delete(
   customersControllers.deleteCustomer
 );
 
+// customers endpoint also controls /customers/:customerId/addresses
+// i.e. ship-to addresses for each customer
+
+router.get(
+  "/:customerId/addresses",
+  auths.checkJWT,
+  customersControllers.getCustomerAddresses
+);
+
+router.post(
+  "/:customerId/addresses",
+  auths.checkJWT,
+  customersControllers.createCustomerAddress
+);
+
+router.get(
+  "/:customerId/addresses/:addressId",
+  auths.checkJWT,
+  customersControllers.getAddressById
+);
+
+router.patch(
+  "/:customerId/addresses/:addressId",
+  auths.checkJWT,
+  customersControllers.updateAddressById
+);
+
+router.delete(
+  "/:customerId/addresses/:addressId",
+  auths.checkJWT,
+  customersControllers.deleteAddressById
+);
+
 module.exports = router;
