@@ -131,9 +131,16 @@ const updateCustomer = (req, res) => {
   res.json("still testing brb");
 };
 
+const deleteCustomer = (req, res) => {
+  // creating scaffolding
+  // will implement later
+  res.json(`Coming Soon!`);
+};
+
 module.exports = {
   listCustomers,
   getCustomerById,
   createCustomer,
   updateCustomer,
+  deleteCustomer,
 };

@@ -22,4 +22,10 @@ router.patch(
   customersControllers.updateCustomer
 );
 
+router.delete(
+  "/:customerId",
+  auths.checkJWT,
+  customersControllers.deleteCustomer
+);
+
 module.exports = router;
