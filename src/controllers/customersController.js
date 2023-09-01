@@ -1,18 +1,38 @@
 const db = require("../sql/db");
 
+// how do I get current userId from the requester?
+
 const listCustomers = (req, res) => {
-  let sql = "SELECT * FROM OrderPost_customers LIMIT 100";
+  const userId = req.userInfo.userId;
+  let sql = `SELECT * FROM OrderPost_customers WHERE user_id = ${userId} LIMIT 100`;
   // I still need to implement sizing
+  if (req.query.size) {
+    console.log(`size is being sent`);
+    const size = +req.query.size;
+    if (Number.isFinite(size)) {
+      console.log(`size is a number`);
+      if (size > 500) {
+        res.status(400).json(`size param is too big`);
+        return;
+      } else if (size < 1) {
+        res.status(400).json(`size param is too small`);
+        return;
+      }
+      sql = `SELECT * FROM OrderPost_customers WHERE user_id = ${userId} LIMIT ${size}`;
+    } else {
+      console.log(`size is sent, but size cannot be coerced into a number`);
+      res.status(400).json(`size param looks incorrect`);
+      return;
+    }
+  }
   db.query(sql, (err, rows) => {
     if (err) {
-      console.log("SELECT * FROM OrderPost_customers LIMIT 100 failed:");
+      console.log(`${sql} failed:`);
       console.log(err);
       res.status(500).json(err);
       return;
     } else {
-      console.log(
-        "SELECT * FROM OrderPost_customers LIMIT 100 returned results:"
-      );
+      console.log(`${sql} returned results:`);
       console.log(rows);
       res.json(rows);
       return;
@@ -101,7 +121,6 @@ const createCustomer = (req, res) => {
 };
 
 const updateCustomer = (req, res) => {
-  //
   const customerId = [req.params.customerId];
   console.log(customerId);
   let requestPropertyCounter = 0;
