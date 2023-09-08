@@ -193,7 +193,7 @@ const createCustomer = (req, res) => {
   });
 };
 
-const updateCustomer = (req, res) => {
+const updateCustomer = async (req, res) => {
   const customerId = +req.params.customerId;
   const userId = req.userInfo.userId;
   console.log(customerId);
@@ -261,7 +261,8 @@ const updateCustomer = (req, res) => {
   params.push(customerId, userId);
   console.log(sql);
   console.log(params);
-  db.query(sql, params, (err, dbResponse) => {
+
+  const updateResults = await db.query(sql, params, (err, dbResponse) => {
     console.log(dbResponse);
     console.log(dbResponse.affectedRows);
     console.log(dbResponse.affectedRows === 0);
@@ -283,10 +284,26 @@ const updateCustomer = (req, res) => {
           },
         });
       }
-    } else {
-      res.json({ data: dbResponse });
     }
   });
+
+  // I'm handling the success case out here
+  // I want to return the updated object from getCustomerById
+  const updatedCustomer = await getCustomerById(
+    {
+      // need to pass a correct object in the request
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        customerId: customerId,
+      },
+    },
+    // (this function call still needs access to updateCustomer's res argument)
+    res
+  );
+  // This code is verging on spaghetti
+  // or maybe a nice cacio e pepe
 };
 
 /*
