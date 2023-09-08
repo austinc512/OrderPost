@@ -262,7 +262,6 @@ const updateCustomer = (req, res) => {
   console.log(sql);
   console.log(params);
   db.query(sql, params, (err, dbResponse) => {
-    // do something
     console.log(dbResponse);
     console.log(dbResponse.affectedRows);
     console.log(dbResponse.affectedRows === 0);
@@ -300,7 +299,52 @@ If nothing gets updated:
 const deleteCustomer = (req, res) => {
   // creating scaffolding
   // will implement later
-  res.json(`Coming Soon!`);
+
+  const customerId = +req.params.customerId;
+  let params = [customerId];
+
+  let errors = [];
+  // const customerId = +req.params.customerId;
+
+  if (!Number.isFinite(customerId)) {
+    errors.push({
+      status: "error",
+      message: "Invalid 'customerId' parameter. It must be an integer.",
+      code: 400,
+    });
+  }
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  let sql =
+    "DELETE FROM OrderPost_customers where customer_id = ? AND user_id = ?";
+
+  const userId = req.userInfo.userId;
+  params.push(userId);
+  db.query(sql, params, (err, dbResponse) => {
+    if (err) {
+      console.log(`an error occurred, `, err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
+    } else if (dbResponse.affectedRows === 0) {
+      res.status(400).json({
+        errors: {
+          status: "error",
+          message: "invalid customer_id",
+          code: 400,
+        },
+      });
+    } else {
+      res.json(dbResponse);
+    }
+  });
 };
 
 // ship-to address functions
