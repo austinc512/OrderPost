@@ -203,13 +203,9 @@ const updateCustomer = async (req, res) => {
   if (!Number.isFinite(customerId)) {
     errors.push({
       status: "error",
-      message: "Invalid 'customerId' parameter. It must be an integer.",
+      message: "Invalid 'customerId' parameter. It must be a positive integer.",
       code: 400,
     });
-  }
-
-  if (errors.length) {
-    return res.status(400).json({ errors });
   }
 
   let requestPropertyCounter = 0;
@@ -226,14 +222,23 @@ const updateCustomer = async (req, res) => {
     }
   }
   if (requestPropertyCounter == 0) {
-    console.log("updateCustomer request body contained no valid properties");
-    return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "request body contained no valid properties to update",
-        code: 400,
-      },
+    // console.log("updateCustomer request body contained no valid properties");
+    // return res.status(400).json({
+    //   errors: {
+    //     status: "error",
+    //     message: "request body contained no valid properties to update",
+    //     code: 400,
+    //   },
+    // });
+    errors.push({
+      status: "error",
+      message: "request body contained no valid properties to update",
+      code: 400,
     });
+  }
+  if (errors.length) {
+    console.log("updateCustomer error(s):", errors);
+    return res.status(400).json({ errors });
   }
   // if here, then request body contains something to update.
   const { first_name, last_name, phone, email } = req.body;
@@ -259,6 +264,7 @@ const updateCustomer = async (req, res) => {
 
   sql += "WHERE customer_id = ? AND user_id = ?";
   params.push(customerId, userId);
+  console.log("updateCustomer sql and params:");
   console.log(sql);
   console.log(params);
 
@@ -274,8 +280,10 @@ const updateCustomer = async (req, res) => {
           code: 400,
         },
       });
+      return;
     } else if (err) {
       {
+        console.log("A more sinister updateCustomer error occurred:", err);
         res.status(500).json({
           errors: {
             status: "error",
@@ -284,6 +292,7 @@ const updateCustomer = async (req, res) => {
           },
         });
       }
+      return;
     }
   });
 
@@ -291,7 +300,7 @@ const updateCustomer = async (req, res) => {
   // I want to return the updated object from getCustomerById
   const updatedCustomer = await getCustomerById(
     {
-      // need to pass a correct object in the request
+      // passing arguments directly:
       userInfo: {
         userId: userId,
       },
@@ -304,19 +313,13 @@ const updateCustomer = async (req, res) => {
   );
   // This code is verging on spaghetti
   // or maybe a nice cacio e pepe
+
+  // also, this doesn't return a warning or anything if nothing is actually updated
+  // it's just re-writing all the same values into the db
+  // I guess that's fine...
 };
 
-/*
-
-If nothing gets updated:
-0 row(s) affected Rows matched: 0  Changed: 0  Warnings: 0
-
-*/
-
 const deleteCustomer = (req, res) => {
-  // creating scaffolding
-  // will implement later
-
   const customerId = +req.params.customerId;
   let params = [customerId];
 
