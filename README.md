@@ -91,5 +91,3 @@ Endpoints:
   - an order object can have multiple shipment objects associated with it.
     - upon void, the items on the shipment object now need to be considered 'unshipped' again on the order record again.
       - This also means I need to implement 'shipped' and 'unshipped' items on the order object as well.
-
-That covers all database tables and how they will be accessed from my API layer!

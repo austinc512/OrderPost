@@ -1,4 +1,6 @@
 const db = require("../sql/db");
+const { validateAddress } = require("../utils/shipEngineAPI");
+const axios = require("axios");
 
 // how do I get current userId from the requester?
 
@@ -114,10 +116,10 @@ const getCustomerById = (req, res) => {
 const createCustomer = (req, res) => {
   /*
   {
-    "first_name": "Austin",
-    "last_name": "Covey",
+    "first_name": "First",
+    "last_name": "Last",
     "phone": "512-555-4444",
-    "email": "austincovey.dev@gmail.com"
+    "email": "name@email.com"
 }
   */
 
@@ -269,9 +271,15 @@ const updateCustomer = async (req, res) => {
   console.log(params);
 
   const updateResults = await db.query(sql, params, (err, dbResponse) => {
+    console.log("DB RESPONSE BELOW:");
     console.log(dbResponse);
-    console.log(dbResponse.affectedRows);
-    console.log(dbResponse.affectedRows === 0);
+    // console.log(dbResponse.affectedRows);
+    // console.log(dbResponse.affectedRows === 0);
+
+    // WORKING HERE NOW
+    // TRYING TO CONTROL FOR IF NOTHING GETS UPDATED
+    // MAYBE THERE'S A WARNING?!
+
     if (dbResponse.affectedRows === 0) {
       res.status(400).json({
         errors: {
@@ -294,8 +302,10 @@ const updateCustomer = async (req, res) => {
       }
       return;
     }
+    // else if dbResponse.changedRows === 0
+    // nothing was updated, but we still tried to re-write to the db
+    // I'm not going to implement an error for this use case, but I'm acknowleding that this occurs
   });
-
   // I'm handling the success case out here
   // I want to return the updated object from getCustomerById
   const updatedCustomer = await getCustomerById(
@@ -313,10 +323,6 @@ const updateCustomer = async (req, res) => {
   );
   // This code is verging on spaghetti
   // or maybe a nice cacio e pepe
-
-  // also, this doesn't return a warning or anything if nothing is actually updated
-  // it's just re-writing all the same values into the db
-  // I guess that's fine...
 };
 
 const deleteCustomer = (req, res) => {
@@ -324,12 +330,11 @@ const deleteCustomer = (req, res) => {
   let params = [customerId];
 
   let errors = [];
-  // const customerId = +req.params.customerId;
 
   if (!Number.isFinite(customerId)) {
     errors.push({
       status: "error",
-      message: "Invalid 'customerId' parameter. It must be an integer.",
+      message: "Invalid 'customerId' parameter. It must be a positive integer.",
       code: 400,
     });
   }
@@ -370,15 +375,22 @@ const deleteCustomer = (req, res) => {
 // ship-to address functions
 
 const getCustomerAddresses = (req, res) => {
-  // creating scaffolding
-  // will implement later
+  // GET /customers/:customerId/addresses
+  //
+  const customerId = +req.params.customerId;
   res.json(`Coming Soon!`);
 };
 
-const createCustomerAddress = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+const createCustomerAddress = async (req, res) => {
+  // I'll revisit this table later.
+  // I've made the ShipEngine API do the thing:
+
+  // const response = await validateAddress(req);
+  // res.json(response);
+
+  // but I should implement on warehouses first, as that's much easier.
+
+  res.json(`coming soon!`);
 };
 
 const getAddressById = (req, res) => {

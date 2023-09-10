@@ -12,10 +12,13 @@ const getWarehouseById = (req, res) => {
   res.json(`Coming Soon!`);
 };
 
-const createWarehouse = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+const createWarehouse = async (req, res) => {
+  // validate address
+  const response = await validateAddress(req);
+  res.json(response);
+  // store address in database
+  // return address
+  // res.json(`Coming Soon!`);
 };
 
 const updateWarehouse = (req, res) => {
