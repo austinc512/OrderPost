@@ -12,12 +12,14 @@ In future versions (most likely outside of the Austin Coding Academy Capstone), 
 
 ### warehouses:
 
-Warehouse objects hold address information for the location(s) a user ships packages from
+Warehouse objects hold address information for the location(s) a user ships packages from.
 
 - GET /warehouses - returns an array of existing warehouse addresses on the account.
 - GET /warehouses/:warehouseId - retrieve 1 warehouse address by its warehouseId.
-- POST /warehouses - pass in address information to create a warehouse object. This creates and returns a new warehouseId.
-- PATCH /warehouses/:warehouseId - update an existing warehouse object.
+- POST /warehouses/verify - address information is sent to ShipEngine's Address Validation endpoint, and the response from ShipEngine is passed along to the client.
+  - The client can accept or reject any updates coming back from ShipEngine.
+- POST /warehouses/ - depending on accept/reject from the above, an address will be written into the database.
+  - Because of this client/server interaction, I think I'll also opt to only support POST requests on this endpoint, not PATCH requests.
 - DELETE /warehouses/:warehouseId - delete an existing warehouse object.
 
 ### customers:

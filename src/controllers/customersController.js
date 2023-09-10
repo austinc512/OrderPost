@@ -1,6 +1,5 @@
 const db = require("../sql/db");
 const { validateAddress } = require("../utils/shipEngineAPI");
-const axios = require("axios");
 
 // how do I get current userId from the requester?
 

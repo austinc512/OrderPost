@@ -1,4 +1,5 @@
 const db = require("../sql/db");
+const { validateAddress } = require("../utils/shipEngineAPI");
 
 const listWarehouses = (req, res) => {
   // creating scaffolding
@@ -12,19 +13,32 @@ const getWarehouseById = (req, res) => {
   res.json(`Coming Soon!`);
 };
 
+const verifyWarehouse = async (req, res) => {
+  // validate address
+  const response = await validateAddress(req);
+  const userId = req.userInfo.userId;
+  // store address in database
+
+  /*
+    do thing here
+  */
+
+  // return address
+  res.json(response);
+};
+
 const createWarehouse = async (req, res) => {
   // validate address
   const response = await validateAddress(req);
-  res.json(response);
+  const userId = req.userInfo.userId;
   // store address in database
-  // return address
-  // res.json(`Coming Soon!`);
-};
 
-const updateWarehouse = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+  /*
+    do thing here
+  */
+
+  // return address
+  res.json(response);
 };
 
 const deleteWarehouse = (req, res) => {
@@ -36,7 +50,7 @@ const deleteWarehouse = (req, res) => {
 module.exports = {
   listWarehouses,
   getWarehouseById,
+  verifyWarehouse,
   createWarehouse,
-  updateWarehouse,
   deleteWarehouse,
 };
