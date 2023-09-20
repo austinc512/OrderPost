@@ -1,31 +1,45 @@
 const db = require("../sql/db");
 
 const listProducts = (req, res) => {
-  let queryString = "SELECT * FROM OrderPost_products LIMIT 100";
+  const userId = req.userInfo.userId;
+  let size = 100; // default value
+  let offset = 0; // default value
+  let errors = [];
+  // offset can be multiplied by page number for pagination.
 
-  // if size param can be coerced into a number, update queryString
   if (req.query.size) {
-    console.log(`size is being sent`);
-    const size = +req.query.size;
-    // using isFinite over isNaN method
-    if (Number.isFinite(size)) {
-      console.log(`size is a number`);
-      if (size > 500) {
-        res.status(400).json(`size param is too big`);
-        return;
-      } else if (size < 1) {
-        res.status(400).json(`size param is too small`);
-        return;
-      }
-      queryString = `SELECT * FROM OrderPost_products LIMIT ${size}`;
-    } else {
-      console.log(`size is sent, but size cannot be coerced into a number`);
-      res.status(400).json(`size param looks incorrect`);
-      return;
+    size = +req.query.size;
+    if (!Number.isFinite(size) || size > 500 || size < 1) {
+      errors.push({
+        status: "error",
+        message:
+          "Invalid 'size' parameter. It must be a number between 1 and 500.",
+        code: 400,
+      });
     }
   }
 
-  db.query(queryString, (err, rows) => {
+  if (req.query.offset) {
+    offset = +req.query.offset;
+    if (!Number.isFinite(offset) || offset < 0) {
+      errors.push({
+        status: "error",
+        message: "Invalid 'offset' parameter. It must be a positive number.",
+        code: 400,
+      });
+    }
+  }
+
+  // this pattern allows for multiple error messages
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  let queryString =
+    "SELECT * FROM OrderPost_products WHERE user_id = ? LIMIT ? OFFSET ?";
+
+  db.query(queryString, [userId, size, offset], (err, rows) => {
     if (err) {
       console.log("listProducts query failed:");
       console.log(err);
@@ -33,7 +47,7 @@ const listProducts = (req, res) => {
     } else {
       console.log("listProducts query succeeded:");
       console.log(rows);
-      return res.json(rows);
+      return res.json({ data: rows });
     }
   });
 };

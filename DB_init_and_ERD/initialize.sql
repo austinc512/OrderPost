@@ -10,15 +10,12 @@
     -- insert into payments referencing orderId
 
 DROP TABLE IF EXISTS OrderPost_ship_to;
-
 DROP TABLE IF EXISTS OrderPost_order_items;
 DROP TABLE IF EXISTS OrderPost_products;
-
 DROP TABLE IF EXISTS OrderPost_shipments;
 DROP TABLE IF EXISTS OrderPost_orders;
 DROP TABLE IF EXISTS OrderPost_customers;
 DROP TABLE IF EXISTS OrderPost_users;
-
 DROP TABLE IF EXISTS OrderPost_warehouses; -- needs to be last I think
 
 CREATE TABLE OrderPost_users (
@@ -97,8 +94,6 @@ CREATE TABLE OrderPost_products (
     REFERENCES OrderPost_users (user_id)
     ON DELETE SET NULL
 );
-
--- we're here with table creation
 
 CREATE TABLE OrderPost_orders (
     order_id INT PRIMARY KEY auto_increment,
