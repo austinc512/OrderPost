@@ -16,9 +16,9 @@ router.get(
   warehouseControllers.getWarehouseById
 );
 
-router.post("/verify", auths.checkJWT, warehouseControllers.createWarehouse);
+router.post("/", auths.checkJWT, warehouseControllers.createWarehouse);
 
-router.post("/", auths.checkJWT, warehouseControllers.verifyWarehouse);
+router.post("/verify", auths.checkJWT, warehouseControllers.verifyWarehouse);
 
 router.delete(
   "/:warehouseId",

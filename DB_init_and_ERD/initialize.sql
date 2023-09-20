@@ -40,7 +40,7 @@ CREATE TABLE OrderPost_customers (
     email VARCHAR (50),
     user_id INT,
     FOREIGN KEY (user_id) 
-    REFERENCES OrderPost_users(user_id) ON DELETE CASCADE
+    REFERENCES OrderPost_users(user_id) ON DELETE SET NULL
 );
 
 CREATE TABLE OrderPost_ship_to (
@@ -61,11 +61,12 @@ CREATE TABLE OrderPost_ship_to (
     address_residential_indicator BOOLEAN,
     FOREIGN KEY (customer_id) 
     REFERENCES OrderPost_customers (customer_id)
-    ON DELETE CASCADE
+    ON DELETE SET NULL
 );
 
 CREATE TABLE OrderPost_warehouses (
     warehouse_id INT PRIMARY KEY auto_increment,
+    user_id INT,
     first_name VARCHAR (40),
     last_name VARCHAR (40),
     nick_name VARCHAR (20),
@@ -79,15 +80,22 @@ CREATE TABLE OrderPost_warehouses (
     state_province VARCHAR (30),
     postal_code VARCHAR (20),
     country_code VARCHAR (10),
-    address_residential_indicator BOOLEAN
+    address_residential_indicator BOOLEAN,
+    FOREIGN KEY (user_id) 
+    REFERENCES OrderPost_users (user_id)
+    ON DELETE SET NULL
 );
 
 CREATE TABLE OrderPost_products (
     product_id INT PRIMARY KEY auto_increment,
+    user_id INT,
     product_name VARCHAR (30),
     price DECIMAL (10,2),
     description VARCHAR (150),
-    UNIQUE (product_name)
+    UNIQUE (product_name),
+    FOREIGN KEY (user_id) 
+    REFERENCES OrderPost_users (user_id)
+    ON DELETE SET NULL
 );
 
 -- we're here with table creation
@@ -115,11 +123,11 @@ CREATE TABLE OrderPost_orders (
     warehouses_id INT,
     FOREIGN KEY (warehouses_id)
     REFERENCES OrderPost_warehouses (warehouse_id)
-    ON DELETE CASCADE,
+    ON DELETE SET NULL,
         -- (M,D) means than values can be stored with up to M digits in total, of which D digits may be after the decimal point
      FOREIGN KEY (customer_id) 
      REFERENCES OrderPost_customers (customer_id)
-     ON DELETE CASCADE
+     ON DELETE SET NULL
 );
 
 -- re-testing comment
@@ -135,11 +143,11 @@ CREATE TABLE OrderPost_order_items (
 
     FOREIGN KEY (order_id)
     REFERENCES OrderPost_orders (order_id)
-    ON DELETE CASCADE,
+    ON DELETE SET NULL,
     FOREIGN KEY (product_id)
     REFERENCES 
     OrderPost_products (product_id)
-    ON DELETE CASCADE
+    ON DELETE SET NULL
 );
 
 -- once a shipping label is created, we can insert into Shipments table
@@ -168,7 +176,7 @@ CREATE TABLE OrderPost_shipments (
     -- still needs tracking and label_id    
      FOREIGN KEY (order_id)
      REFERENCES OrderPost_orders (order_id)
-     ON DELETE CASCADE
+     ON DELETE SET NULL
 );
 
 -- I somehow completely forgot that there needs to be a users table
@@ -190,4 +198,4 @@ CREATE TABLE OrderPost_shipments (
 
 -- ALTER TABLE OrderPost_customers 
 -- ADD FOREIGN KEY (user_id) REFERENCES OrderPost_users(user_id) 
--- ON DELETE CASCADE;
+-- ON DELETE SET NULL;

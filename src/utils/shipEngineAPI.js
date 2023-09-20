@@ -11,25 +11,17 @@ const instance = axios.create({
 });
 
 const validateAddress = async (address) => {
-  //   console.log("logging address object");
-  //   console.log(address.body);
-  //   const objectTest = new Object(address.body[0]);
   try {
-    const response = await instance
-      .post("/v1/addresses/validate", [...address.body])
-      // ^^ this looks gross, but this is how I generate an array of address objects.
-      // the request body itself IS an array, but it seems like axios needs some massaging to work
-      .then((response) => {
-        console.log(`ShipEngine address validation response:`);
-        console.log(response);
-        return response.data;
-      });
+    const response = await instance.post("/v1/addresses/validate", [
+      address.body,
+    ]);
+    // ** Note 1
+    console.log(response);
     return response;
   } catch (error) {
-    console.log("error in address validation:", error);
-    throw new Error("Address validation failed");
+    console.log("error in address validation:", error.response);
+    return error.response;
   }
-  //   return true;
 };
 
 module.exports = {
@@ -37,13 +29,20 @@ module.exports = {
 };
 
 /*
+Note 1:
+the request to ShipEngine needs to be an array
+my warehouses/verify endpoint only accepts 1 address object
+if multiple, can use:
+    const response = await instance.post("/v1/addresses/validate", [
+      ... address.body,
+    ]);
+      ^^ looks gross, but works.
 
-{"name":"Mickey and Minnie Mouse","phone":"714-781-4565","company_name":"The Walt Disney Company","address_line1":"500 South Buena Vista Street","city_locality":"Burbank","state_province":"CA","postal_code":91521,"country_code":"US"}
+Inside warehouseControllers.js
+    res.json(response.data[0]);
+    should be changed to
+    res.json(response.data);
 
-{"name":"Mickey and Minnie Mouse","phone":"714-781-4565","company_name":"The Walt Disney Company","address_line1":"500 South Buena Vista Street","city_locality":"Burbank","state_province":"CA","postal_code":91521,"country_code":"US"}
-
-[[{"name":"Mickey and Minnie Mouse","phone":"714-781-4565","company_name":"The Walt Disney Company","address_line1":"500 South Buena Vista Street","city_locality":"Burbank","state_province":"CA","postal_code":91521,"country_code":"US"}]]
-
-[{"name":"Mickey and Minnie Mouse","phone":"714-781-4565","company_name":"The Walt Disney Company","address_line1":"500 South Buena Vista Street","city_locality":"Burbank","state_province":"CA","postal_code":91521,"country_code":"US"}]
-
+then my /warehouses/verify endpoint can support an array of address objects
+(like how the request would be formatted to ShipEngine)
 */
