@@ -53,60 +53,107 @@ const listProducts = (req, res) => {
 };
 
 const createProduct = (req, res) => {
-  /*
-    Looking for:
-    {
-        "product_name": "Test Product API 1",
-        "price": 10.99,
-        "description": "Description must be less than 150 characters."
-    }
-*/
+  /* Looking for:
+      {
+          "product_name": "Test Product API 1",
+          "price": 10.99,
+          "description": "Description must be less than 150 characters."
+      }
+  */
 
-  if (
-    !req.body ||
-    !req.body.product_name ||
-    !req.body.price ||
-    !req.body.description
-  ) {
-    console.log("A falsy value was sent in the createProduct request body");
-    res
-      .status(400)
-      .json("A required property in the request has a falsy value");
-    return;
-  }
-
+  let errors = [];
+  const userId = req.userInfo.userId;
   let { product_name, price, description } = req.body;
-  console.log(product_name);
-  console.log(price, typeof price);
-  console.log(description);
-
-  // coerce price
+  // attempt to coerce price
   price = +price;
-  // I'm not doing any favors the other properties of request
-  // Now if datatypes are incorrent, then return errors
-  if (!Number.isFinite(price)) {
-    console.log(`price is not a num`);
-  } else if (typeof product_name != "string") {
-    console.log(`product_name wrong type`);
-    res.status(400).json(`product name looks incorrect`);
-    return;
-  } else if (typeof description != "string") {
-    console.log(`description wrong type`);
-    res.status(400).json(`description looks incorrect`);
-    return;
+
+  // empty request body
+  if (!req.body) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Missing request body",
+        code: 400,
+      },
+    });
+  }
+  // product_name errors
+  if (typeof product_name !== "string") {
+    errors.push({
+      status: "error",
+      message: "product_name is not a string",
+      code: 400,
+    });
+  }
+  if (!product_name) {
+    errors.push({
+      status: "error",
+      message: "Missing product_name",
+      code: 400,
+    });
+  }
+  const checkNaN = isNaN(price);
+  // price errors
+  // I've already attempted to coerce it.
+  if (typeof price !== "number" || checkNaN) {
+    errors.push({
+      status: "error",
+      message: "price is not a number",
+      code: 400,
+    });
+  }
+  if (!price && !checkNaN) {
+    errors.push({
+      status: "error",
+      message: "Missing price",
+      code: 400,
+    });
+  }
+  if (typeof price === "number" && !checkNaN && +price.toFixed(2) !== price) {
+    errors.push({
+      status: "error",
+      message: "Too many decimal places in price",
+      code: 400,
+    });
+  }
+  // description errors
+  if (!description) {
+    errors.push({
+      status: "error",
+      message: "missing description",
+      code: 400,
+    });
+  }
+  if (typeof description !== "string") {
+    errors.push({
+      status: "error",
+      message: "Description must be a string",
+      code: 400,
+    });
+  }
+  if (description.length > 150) {
+    errors.push({
+      status: "error",
+      message: "Description must be 150 characters or less",
+      code: 400,
+    });
   }
 
-  const params = [product_name, price, description];
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
 
-  // if nothing throws above, data is valid.
-  // product names need to be unique
+  const params = [userId, product_name, price, description];
+
+  // if nothing throws above, data should be valid.
+  // db will have to determine if product name fails unique constraint, however
 
   // if you need to have multiple asynchronous queries,
   // then use db.querySync
   // if 1 query, use db.query
 
   let sql =
-    "INSERT into OrderPost_products (product_name, price, description) VALUES (?, ?, ?)";
+    "INSERT into OrderPost_products (user_id, product_name, price, description) VALUES (?, ?, ?, ?)";
 
   db.query(sql, params, (err, dbResponse) => {
     if (err) {
@@ -114,30 +161,85 @@ const createProduct = (req, res) => {
       console.log(err);
       console.log(err.code);
       if (err.code == "ER_DUP_ENTRY") {
-        res.status(400).json(`not a unique product name`);
-        return;
+        return res.status(400).json({
+          errors: {
+            status: "error",
+            message: "Not a unique product name",
+            code: 400,
+          },
+        });
       } else {
-        res.status(500).json(`something failed`);
-        return;
+        return res.status(500).json({
+          errors: {
+            status: "error",
+            message: "Internal server error",
+            code: 500,
+          },
+        });
       }
     } else {
       console.log(`insert into OrderPost_products succeeded:`);
       console.log(dbResponse);
-      return res.json(dbResponse);
+      return res.json({ data: dbResponse });
     }
   });
 };
 
 const getProductById = (req, res) => {
-  const productId = [req.params.productId];
-  let sql = "SELECT * FROM OrderPost_products WHERE product_id = ?";
-  db.query(sql, productId, (err, rows) => {
+  const userId = req.userInfo.userId;
+  const productId = +req.params.productId;
+  let errors = [];
+
+  const checkNaN = isNaN(productId);
+
+  if (checkNaN) {
+    errors.push({
+      status: "error",
+      message: "productId is not a number",
+      code: 400,
+    });
+  }
+
+  if (
+    !checkNaN &&
+    typeof productId === "number" &&
+    Math.trunc(productId) !== productId
+  ) {
+    errors.push({
+      status: "error",
+      message: "productId must be an integer",
+      code: 400,
+    });
+  }
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  // need to use product_id and user_id
+  let sql =
+    "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
+  const params = [userId, productId];
+  db.query(sql, params, (err, rows) => {
     if (err) {
       console.log(`SELECT from OrderPost_products by ID failed:`);
       console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
     } else {
       if (rows.length === 0) {
-        res.status(400).json(`There are no products with this ID`);
+        res.status(400).json({
+          errors: {
+            status: "error",
+            message: "There are no products with this ID",
+            code: 400,
+          },
+        });
         return;
       } else {
         console.log(`SELECT from OrderPost_products by ID was successful:`);
@@ -157,6 +259,7 @@ const updateProduct = (req, res) => {
         "description": "Description must be less than 150 characters."
     }
   */
+  let errors = [{ forceFail: true }];
   const productId = +req.params.productId;
   let { product_name, price, description } = req.body;
   let sql = "UPDATE OrderPost_products SET ";
@@ -175,6 +278,10 @@ const updateProduct = (req, res) => {
   if (description && typeof description == "string") {
     sql += "description = ? ";
     params.push(description);
+  }
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
   }
 
   // after adding updated columns, finish off SQL query
