@@ -1,5 +1,9 @@
 const db = require("../sql/db");
 
+// if you need to have multiple asynchronous queries,
+// then use db.querySync
+// if 1 query, use db.query
+
 const listProducts = (req, res) => {
   const userId = req.userInfo.userId;
   let size = 100; // default value
@@ -13,7 +17,7 @@ const listProducts = (req, res) => {
       errors.push({
         status: "error",
         message:
-          "Invalid 'size' parameter. It must be a number between 1 and 500.",
+          "Invalid 'size' parameter. It must be an integer between 1 and 500",
         code: 400,
       });
     }
@@ -24,7 +28,7 @@ const listProducts = (req, res) => {
     if (!Number.isFinite(offset) || offset < 0) {
       errors.push({
         status: "error",
-        message: "Invalid 'offset' parameter. It must be a positive number.",
+        message: "Invalid 'offset' parameter. It must be an integer",
         code: 400,
       });
     }
@@ -43,7 +47,13 @@ const listProducts = (req, res) => {
     if (err) {
       console.log("listProducts query failed:");
       console.log(err);
-      res.sendStatus(500); // it's the server's fault
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
     } else {
       console.log("listProducts query succeeded:");
       console.log(rows);
@@ -64,10 +74,10 @@ const createProduct = async (req, res) => {
   let errors = [];
   const userId = req.userInfo.userId;
   let { product_name, price, description } = req.body;
-  // attempt to coerce price
+  // attempt to coerce price into Number
   price = +price;
 
-  // empty request body
+  // handle empty request body
   if (!req.body) {
     return res.status(400).json({
       errors: {
@@ -93,8 +103,7 @@ const createProduct = async (req, res) => {
     });
   }
   const checkNaN = isNaN(price);
-  // price errors
-  // I've already attempted to coerce it.
+  // price errors (I've already attempted to coerce price to Number)
   if (typeof price !== "number" || checkNaN) {
     errors.push({
       status: "error",
@@ -146,65 +155,53 @@ const createProduct = async (req, res) => {
   const params = [userId, product_name, price, description];
 
   // if nothing throws above, data should be valid.
-  // db will have to determine if product name fails unique constraint, however
-
-  // if you need to have multiple asynchronous queries,
-  // then use db.querySync
-  // if 1 query, use db.query
+  // However, DB will have to determine if product name fails unique constraint.
 
   let sql =
     "INSERT into OrderPost_products (user_id, product_name, price, description) VALUES (?, ?, ?, ?)";
+  let updatedResults;
 
-  let productId;
-  const updatedResults = await db.query(sql, params, (err, dbResponse) => {
-    if (err) {
-      console.log(`insert into OrderPost_products failed:`);
-      console.log(err);
-      console.log(err.code);
-      if (err.code == "ER_DUP_ENTRY") {
-        return res.status(400).json({
-          errors: {
-            status: "error",
-            message: "Not a unique product name",
-            code: 400,
-          },
-        });
-      } else {
-        return res.status(500).json({
-          errors: {
-            status: "error",
-            message: "Internal server error",
-            code: 500,
-          },
-        });
-      }
+  try {
+    updatedResults = await db.querySync(sql, params);
+  } catch (err) {
+    console.log(`INSERT into OrderPost_products failed:`);
+    console.log(err);
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "Not a unique product name",
+          code: 400,
+        },
+      });
     } else {
-      console.log(`insert into OrderPost_products succeeded:`);
-      productId = dbResponse.insertId;
-      console.log(productId);
-      console.log(dbResponse);
-      return res.json({ data: dbResponse });
-      // res.json(productId);
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
     }
-  });
-  console.log(productId);
-
-  // const target = updatedResults.insertId;
-
-  // const updatedProduct = await getProductById(
-  //   {
-  //     // passing arguments directly:
-  //     userInfo: {
-  //       userId: userId,
-  //     },
-  //     params: {
-  //       productId: target,
-  //     },
-  //   },
-  //   // (this function call still needs access to updateProduct's res argument)
-  //   res
-  //   // the response from that function becomes the response of this function
-  // );
+  }
+  // if here, INSERT was successful
+  console.log(
+    `new product created, will call getProductById with productId ${updatedResults.insertId}`
+  );
+  // wrangling parameters together to make function call:
+  getProductById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        productId: updatedResults.insertId,
+      },
+    },
+    // (getProductById still needs access to createProduct's res parameter)
+    res
+    // the response from getProductById becomes the response of createProduct
+  );
 };
 
 const getProductById = (req, res) => {
@@ -238,7 +235,6 @@ const getProductById = (req, res) => {
     return res.status(400).json({ errors });
   }
 
-  // need to use product_id and user_id
   let sql =
     "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
   const params = [userId, productId];
@@ -285,9 +281,9 @@ const updateProduct = async (req, res) => {
   const productId = +req.params.productId;
   const userId = req.userInfo.userId;
   let { product_name, price, description } = req.body;
-  console.log({ product_name });
   let sql = "UPDATE OrderPost_products SET ";
   const params = [];
+
   // if data is formatted correctly, append to SQL string.
   if (product_name && typeof product_name == "string") {
     sql += "product_name = ?, ";
@@ -349,39 +345,39 @@ const updateProduct = async (req, res) => {
   // after adding updated columns, finish off SQL query
   sql += "WHERE user_id = ? AND product_id = ?";
   params.push(userId, productId);
-  const updateResults = await db.query(sql, params, (err, dbResponse) => {
-    if (err) {
-      console.log("updateProduct SQL statement failed:");
-      console.log(err);
-      return res.status(500).json({
-        errors: {
-          status: "error",
-          message: "Internal server error",
-          code: 500,
-        },
-      });
-    } else {
-      console.log("rows:");
-      console.log(dbResponse.affectedRows);
-      if (dbResponse.affectedRows === 0) {
-        return res.status(400).json({
-          errors: {
-            status: "error",
-            message: "There are no products with this product_id",
-            code: 400,
-          },
-        });
-      }
-      console.log(`db response:`);
-      console.log(dbResponse);
-      // notice there are only error responses here
-    }
-  });
-  // handling success case out here
-  // I'm returning the updated product from getProductById
-  const updatedProduct = await getProductById(
+  // add similar async function call to updateProduct
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, params);
+  } catch (err) {
+    console.log(`UPDATE OrderPost_products failed:`);
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal server error",
+        code: 500,
+      },
+    });
+  }
+  console.log(`UPDATED RESULTS:`);
+  console.log(updatedResults);
+  if (updatedResults.affectedRows === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "There are no products with this product_id",
+        code: 400,
+      },
+    });
+  }
+  // if here, UPDATE was successful
+  console.log(
+    `product updated, will call getProductById with productId ${updatedResults.insertId}`
+  );
+  // wrangling parameters together to make function call:
+  getProductById(
     {
-      // passing arguments directly:
       userInfo: {
         userId: userId,
       },
@@ -389,9 +385,9 @@ const updateProduct = async (req, res) => {
         productId: productId,
       },
     },
-    // (this function call still needs access to updateProduct's res argument)
+    // (getProductById still needs access to updateProduct's res parameter)
     res
-    // the response from that function becomes the response of this function
+    // the response from getProductById becomes the response of updateProduct
   );
 };
 
@@ -425,7 +421,7 @@ const deleteProduct = (req, res) => {
         });
       } else {
         console.log(`productId ${productId} deleted successfully`);
-        res.sendStatus(204);
+        res.json({ message: "product deleted successfully" });
         return;
       }
     }
