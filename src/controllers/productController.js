@@ -52,7 +52,7 @@ const listProducts = (req, res) => {
   });
 };
 
-const createProduct = (req, res) => {
+const createProduct = async (req, res) => {
   /* Looking for:
       {
           "product_name": "Test Product API 1",
@@ -155,7 +155,8 @@ const createProduct = (req, res) => {
   let sql =
     "INSERT into OrderPost_products (user_id, product_name, price, description) VALUES (?, ?, ?, ?)";
 
-  db.query(sql, params, (err, dbResponse) => {
+  let productId;
+  const updatedResults = await db.query(sql, params, (err, dbResponse) => {
     if (err) {
       console.log(`insert into OrderPost_products failed:`);
       console.log(err);
@@ -179,10 +180,31 @@ const createProduct = (req, res) => {
       }
     } else {
       console.log(`insert into OrderPost_products succeeded:`);
+      productId = dbResponse.insertId;
+      console.log(productId);
       console.log(dbResponse);
       return res.json({ data: dbResponse });
+      // res.json(productId);
     }
   });
+  console.log(productId);
+
+  // const target = updatedResults.insertId;
+
+  // const updatedProduct = await getProductById(
+  //   {
+  //     // passing arguments directly:
+  //     userInfo: {
+  //       userId: userId,
+  //     },
+  //     params: {
+  //       productId: target,
+  //     },
+  //   },
+  //   // (this function call still needs access to updateProduct's res argument)
+  //   res
+  //   // the response from that function becomes the response of this function
+  // );
 };
 
 const getProductById = (req, res) => {
@@ -250,7 +272,7 @@ const getProductById = (req, res) => {
   });
 };
 
-const updateProduct = (req, res) => {
+const updateProduct = async (req, res) => {
   /*
     Looking for any of the three:
     {
@@ -327,14 +349,10 @@ const updateProduct = (req, res) => {
   // after adding updated columns, finish off SQL query
   sql += "WHERE user_id = ? AND product_id = ?";
   params.push(userId, productId);
-  db.query(sql, params, (err, dbResponse) => {
+  const updateResults = await db.query(sql, params, (err, dbResponse) => {
     if (err) {
       console.log("updateProduct SQL statement failed:");
       console.log(err);
-      // if (err.code == "ER_DUP_ENTRY") {
-      //   res.status(400).json(`Sorry, that product name is already reserved.`);
-      //   return;
-      // }
       return res.status(500).json({
         errors: {
           status: "error",
@@ -354,10 +372,27 @@ const updateProduct = (req, res) => {
           },
         });
       }
+      console.log(`db response:`);
       console.log(dbResponse);
-      res.json({ data: { product_name, price, description } });
+      // notice there are only error responses here
     }
   });
+  // handling success case out here
+  // I'm returning the updated product from getProductById
+  const updatedProduct = await getProductById(
+    {
+      // passing arguments directly:
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        productId: productId,
+      },
+    },
+    // (this function call still needs access to updateProduct's res argument)
+    res
+    // the response from that function becomes the response of this function
+  );
 };
 
 const deleteProduct = (req, res) => {
