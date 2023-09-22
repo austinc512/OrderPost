@@ -15,8 +15,9 @@ DROP TABLE IF EXISTS OrderPost_products;
 DROP TABLE IF EXISTS OrderPost_shipments;
 DROP TABLE IF EXISTS OrderPost_orders;
 DROP TABLE IF EXISTS OrderPost_customers;
+DROP TABLE IF EXISTS OrderPost_warehouses;
 DROP TABLE IF EXISTS OrderPost_users;
-DROP TABLE IF EXISTS OrderPost_warehouses; -- needs to be last I think
+-- this deletion order works
 
 CREATE TABLE OrderPost_users (
     user_id INT PRIMARY KEY auto_increment,
@@ -89,11 +90,13 @@ CREATE TABLE OrderPost_products (
     product_name VARCHAR (30),
     price DECIMAL (10,2),
     description VARCHAR (150),
-    UNIQUE (product_name),
+    UNIQUE (user_id, product_name),
     FOREIGN KEY (user_id) 
     REFERENCES OrderPost_users (user_id)
     ON DELETE SET NULL
 );
+
+-- updated UNIQUE constraint to be unique per product_name per user_id
 
 CREATE TABLE OrderPost_orders (
     order_id INT PRIMARY KEY auto_increment,

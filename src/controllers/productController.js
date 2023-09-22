@@ -236,7 +236,7 @@ const getProductById = (req, res) => {
         res.status(400).json({
           errors: {
             status: "error",
-            message: "There are no products with this ID",
+            message: "There are no products with this product_id",
             code: 400,
           },
         });
@@ -259,9 +259,11 @@ const updateProduct = (req, res) => {
         "description": "Description must be less than 150 characters."
     }
   */
-  let errors = [{ forceFail: true }];
+  let errors = [];
   const productId = +req.params.productId;
+  const userId = req.userInfo.userId;
   let { product_name, price, description } = req.body;
+  console.log({ product_name });
   let sql = "UPDATE OrderPost_products SET ";
   const params = [];
   // if data is formatted correctly, append to SQL string.
@@ -269,59 +271,126 @@ const updateProduct = (req, res) => {
     sql += "product_name = ?, ";
     params.push(product_name);
   }
+  if (product_name && typeof product_name !== "string") {
+    errors.push({
+      status: "error",
+      message: "product_name must be a string",
+      code: 400,
+    });
+  }
   //coerce price to number type (in case string is sent)
   price = +price;
-  if (price && typeof price == "number") {
+  const checkNaN = isNaN(price);
+  const correctPriceFormat = +price.toFixed(2) === price;
+  // I should allow $0 and discounts/coupons (negative values)
+  if (typeof price == "number" && !checkNaN && correctPriceFormat) {
     sql += "price = ?, ";
     params.push(price);
   }
-  if (description && typeof description == "string") {
+  if (!correctPriceFormat) {
+    errors.push({
+      status: "error",
+      message: "price is not formatted correctly",
+      code: 400,
+    });
+  }
+  if (checkNaN) {
+    errors.push({
+      status: "error",
+      message: "price is not a number",
+      code: 400,
+    });
+  }
+  if (typeof description !== "string") {
+    errors.push({
+      status: "error",
+      message: "Description must be a string",
+      code: 400,
+    });
+  }
+  if (typeof description === "string" && description.length > 150) {
+    errors.push({
+      status: "error",
+      message: "Description must be 150 characters or less",
+      code: 400,
+    });
+  }
+  if (typeof description == "string" && description.length <= 150) {
     sql += "description = ? ";
     params.push(description);
   }
 
   if (errors.length) {
-    return res.status(400).json({ errors });
+    return res.status(400).json({ errors, params });
   }
 
   // after adding updated columns, finish off SQL query
-  sql += "WHERE product_id = ?";
-  params.push(productId);
+  sql += "WHERE user_id = ? AND product_id = ?";
+  params.push(userId, productId);
   db.query(sql, params, (err, dbResponse) => {
     if (err) {
-      console.log("an error occurred:");
+      console.log("updateProduct SQL statement failed:");
       console.log(err);
-      if (err.code == "ER_DUP_ENTRY") {
-        res.status(400).json(`Sorry, that product name is already reserved.`);
-        return;
-      }
-      res.status(500).json(`somthing went wrong`);
-      return;
+      // if (err.code == "ER_DUP_ENTRY") {
+      //   res.status(400).json(`Sorry, that product name is already reserved.`);
+      //   return;
+      // }
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
     } else {
+      console.log("rows:");
+      console.log(dbResponse.affectedRows);
+      if (dbResponse.affectedRows === 0) {
+        return res.status(400).json({
+          errors: {
+            status: "error",
+            message: "There are no products with this product_id",
+            code: 400,
+          },
+        });
+      }
       console.log(dbResponse);
-      res.json(`Product updated!!`);
+      res.json({ data: { product_name, price, description } });
     }
   });
 };
 
 const deleteProduct = (req, res) => {
-  const productId = [req.params.productId];
-  let sql = "DELETE FROM OrderPost_products where product_id = ?";
-  let param = productId;
+  const userId = req.userInfo.userId;
+  const productId = req.params.productId;
+  let sql =
+    "DELETE FROM OrderPost_products where user_id = ? AND product_id = ?";
+  let param = [userId, productId];
 
   db.query(sql, param, (err, dbRes) => {
     if (err) {
       console.log("error in delete statment");
       console.log(err);
-      res.status(500).json(`something went wrong`);
-      return;
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
     } else {
       if (dbRes.affectedRows == 0) {
-        console.log(`${productId} is not a valid productId to delete`);
-        res.status(400).json(`not a valid productId`);
+        console.log(`${productId} is not a valid product_id to DELETE`);
+        res.status(400).json({
+          errors: {
+            status: "error",
+            message: "There are no products with this product_id",
+            code: 400,
+          },
+        });
       } else {
         console.log(`productId ${productId} deleted successfully`);
-        res.json(`delete successful. Hope you don't regret it!!`);
+        res.sendStatus(204);
         return;
       }
     }
