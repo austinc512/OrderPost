@@ -119,7 +119,7 @@ const getCustomerById = (req, res) => {
   });
 };
 
-const createCustomer = (req, res) => {
+const createCustomer = async (req, res) => {
   /*
   {
     "first_name": "First",
@@ -169,36 +169,83 @@ const createCustomer = (req, res) => {
 
   let params = [first_name, last_name, phone, email, userId];
 
-  db.query(sql, params, (err, dbResponse) => {
-    if (err) {
-      console.log(`insert into OrderPost_customers failed:`);
-      console.log(err);
-      console.log(err.code);
-      // I'm not enforcing uniqueness on anything in this table right now (other than auto ID)
-      // that could change later, so I'm still using this pattern
-      if (err.code == "ER_DUP_ENTRY") {
-        return res.status(400).json({
-          errors: {
-            status: "error",
-            message: "Not a unique customer",
-            code: 400,
-          },
-        });
-      } else {
-        return res.status(500).json({
-          errors: {
-            status: "error",
-            message: "Internal Server Error",
-            code: 500,
-          },
-        });
-      }
+  // OLD CODE START
+  // db.query(sql, params, (err, dbResponse) => {
+  //   if (err) {
+  //     console.log(`insert into OrderPost_customers failed:`);
+  //     console.log(err);
+  //     console.log(err.code);
+  //     // I'm not enforcing uniqueness on anything in this table right now (other than auto ID)
+  //     // that could change later, so I'm still using this pattern
+  //     if (err.code == "ER_DUP_ENTRY") {
+  //       return res.status(400).json({
+  //         errors: {
+  //           status: "error",
+  //           message: "Not a unique customer",
+  //           code: 400,
+  //         },
+  //       });
+  //     } else {
+  //       return res.status(500).json({
+  //         errors: {
+  //           status: "error",
+  //           message: "Internal Server Error",
+  //           code: 500,
+  //         },
+  //       });
+  //     }
+  //   } else {
+  //     console.log(`insert into OrderPost_customers succeeded:`);
+  //     console.log(dbResponse);
+  //     return res.json({ data: { dbResponse } });
+  //   }
+  // });
+  //  OLD CODE END
+
+  // NEW CODE START
+  let updatedResults;
+
+  try {
+    updatedResults = await db.querySync(sql, params);
+  } catch (err) {
+    //
+    console.log(`INSERT into OrderPost_customers failed:`);
+    console.log(err);
+    if (err.code == "ER_DUP_ENTRY") {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "Not a unique customer",
+          code: 400,
+        },
+      });
     } else {
-      console.log(`insert into OrderPost_customers succeeded:`);
-      console.log(dbResponse);
-      return res.json({ data: { dbResponse } });
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      });
     }
-  });
+  }
+  // if here, INSERT was successful
+  console.log(
+    `new customer created, will call getCustomerById with productId ${updatedResults.insertId}`
+  );
+  getCustomerById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        customerId: updatedResults.insertId,
+      },
+    },
+    // (getProductById still needs access to createCustomer's res parameter)
+    res
+    // the response from getCustomerById becomes the response of createCustomer
+  );
 };
 
 const updateCustomer = async (req, res) => {
@@ -230,14 +277,6 @@ const updateCustomer = async (req, res) => {
     }
   }
   if (requestPropertyCounter == 0) {
-    // console.log("updateCustomer request body contained no valid properties");
-    // return res.status(400).json({
-    //   errors: {
-    //     status: "error",
-    //     message: "request body contained no valid properties to update",
-    //     code: 400,
-    //   },
-    // });
     errors.push({
       status: "error",
       message: "request body contained no valid properties to update",
@@ -276,47 +315,34 @@ const updateCustomer = async (req, res) => {
   console.log(sql);
   console.log(params);
 
-  const updateResults = await db.query(sql, params, (err, dbResponse) => {
-    console.log("DB RESPONSE BELOW:");
-    console.log(dbResponse);
-    // console.log(dbResponse.affectedRows);
-    // console.log(dbResponse.affectedRows === 0);
+  let updatedResults;
 
-    // WORKING HERE NOW
-    // TRYING TO CONTROL FOR IF NOTHING GETS UPDATED
-    // MAYBE THERE'S A WARNING?!
-
-    if (dbResponse.affectedRows === 0) {
-      res.status(400).json({
+  try {
+    updatedResults = await db.querySync(sql, params);
+    if (updatedResults.affectedRows === 0) {
+      return res.status(400).json({
         errors: {
           status: "error",
           message: "invalid customer_id",
           code: 400,
         },
       });
-      return;
-    } else if (err) {
-      {
-        console.log("A more sinister updateCustomer error occurred:", err);
-        res.status(500).json({
-          errors: {
-            status: "error",
-            message: "internal server error",
-            code: 500,
-          },
-        });
-      }
-      return;
     }
-    // else if dbResponse.changedRows === 0
-    // nothing was updated, but we still tried to re-write to the db
-    // I'm not going to implement an error for this use case, but I'm acknowleding that this occurs
-  });
-  // I'm handling the success case out here
-  // I want to return the updated object from getCustomerById
-  const updatedCustomer = await getCustomerById(
+  } catch (err) {
+    console.log("A more sinister updateCustomer error occurred:");
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "internal server error",
+        code: 500,
+      },
+    });
+  }
+
+  // wrangling parameters together to make function call:
+  getCustomerById(
     {
-      // passing arguments directly:
       userInfo: {
         userId: userId,
       },
