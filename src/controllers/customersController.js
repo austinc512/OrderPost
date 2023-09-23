@@ -169,39 +169,6 @@ const createCustomer = async (req, res) => {
 
   let params = [first_name, last_name, phone, email, userId];
 
-  // OLD CODE START
-  // db.query(sql, params, (err, dbResponse) => {
-  //   if (err) {
-  //     console.log(`insert into OrderPost_customers failed:`);
-  //     console.log(err);
-  //     console.log(err.code);
-  //     // I'm not enforcing uniqueness on anything in this table right now (other than auto ID)
-  //     // that could change later, so I'm still using this pattern
-  //     if (err.code == "ER_DUP_ENTRY") {
-  //       return res.status(400).json({
-  //         errors: {
-  //           status: "error",
-  //           message: "Not a unique customer",
-  //           code: 400,
-  //         },
-  //       });
-  //     } else {
-  //       return res.status(500).json({
-  //         errors: {
-  //           status: "error",
-  //           message: "Internal Server Error",
-  //           code: 500,
-  //         },
-  //       });
-  //     }
-  //   } else {
-  //     console.log(`insert into OrderPost_customers succeeded:`);
-  //     console.log(dbResponse);
-  //     return res.json({ data: { dbResponse } });
-  //   }
-  // });
-  //  OLD CODE END
-
   // NEW CODE START
   let updatedResults;
 
