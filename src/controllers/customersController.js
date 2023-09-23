@@ -10,7 +10,14 @@ const listCustomers = (req, res) => {
   let errors = [];
 
   /*
-  later, offset can be multiplied by page number for pagination.
+  frontend will handle pagination via offset parameter
+  offset = (pageNumber - 1) * size
+
+  So if I have 100 products, and I click 'next page',
+  it seems like I'll just have an empty page
+  I'll need to figure out how to prevent this later.
+
+  if data.length < size, disable next page button.
   */
 
   if (req.query.size) {
@@ -19,7 +26,7 @@ const listCustomers = (req, res) => {
       errors.push({
         status: "error",
         message:
-          "Invalid 'size' parameter. It must be a number between 1 and 500.",
+          "Invalid 'size' parameter. It must be an integer between 1 and 500.",
         code: 400,
       });
     }
@@ -30,7 +37,7 @@ const listCustomers = (req, res) => {
     if (!Number.isFinite(offset) || offset < 0) {
       errors.push({
         status: "error",
-        message: "Invalid 'offset' parameter. It must be a positive number.",
+        message: "Invalid 'offset' parameter. It must be a positive integer.",
         code: 400,
       });
     }
@@ -174,7 +181,7 @@ const createCustomer = (req, res) => {
           errors: {
             status: "error",
             message: "Not a unique customer",
-            code: 500,
+            code: 400,
           },
         });
       } else {

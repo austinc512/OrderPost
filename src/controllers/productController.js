@@ -9,7 +9,15 @@ const listProducts = (req, res) => {
   let size = 100; // default value
   let offset = 0; // default value
   let errors = [];
-  // offset can be multiplied by page number for pagination.
+
+  /*
+  frontend will handle pagination via offset parameter
+  offset = (pageNumber - 1) * size
+
+  So if I have 100 products, and I click 'next page',
+  it seems like I'll just have an empty page
+  I'll need to figure out how to prevent this later.
+  */
 
   if (req.query.size) {
     size = +req.query.size;
@@ -57,7 +65,13 @@ const listProducts = (req, res) => {
     } else {
       console.log("listProducts query succeeded:");
       console.log(rows);
-      return res.json({ data: rows });
+      return res.json({
+        data: rows,
+        meta: {
+          size,
+          offset,
+        },
+      });
     }
   });
 };
