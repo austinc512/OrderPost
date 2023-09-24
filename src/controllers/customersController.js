@@ -50,7 +50,8 @@ const listCustomers = (req, res) => {
     "SELECT * FROM OrderPost_customers WHERE user_id = ? LIMIT ? OFFSET ?";
   db.query(sql, [userId, size, offset], (err, rows) => {
     if (err) {
-      console.error("SQL query failed:", err);
+      console.error("SELECT * FROM OrderPost_customers failed:");
+      console.log(err);
       return res.status(500).json({
         status: "error",
         message: "Internal Server Error",
