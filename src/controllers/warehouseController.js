@@ -103,6 +103,7 @@ const createWarehouse = async (req, res) => {
   const {
     first_name,
     last_name,
+    nick_name,
     phone,
     email,
     company_name,
@@ -118,6 +119,7 @@ const createWarehouse = async (req, res) => {
   console.log({
     first_name,
     last_name,
+    nick_name,
     phone,
     email,
     company_name,
@@ -134,6 +136,7 @@ const createWarehouse = async (req, res) => {
   if (
     !first_name ||
     !last_name ||
+    !nick_name ||
     !phone ||
     !address_line1 ||
     !city_locality ||
@@ -144,7 +147,31 @@ const createWarehouse = async (req, res) => {
     errors.push({
       status: "error",
       message:
-        "One or more required properties are missing. Requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code",
+        "One or more required properties are missing. Requirements: first_name, last_name, nick_name, phone, address_line1, city_locality, state_province, postal_code, country_code",
+      code: 400,
+    });
+  }
+  /*
+  if type of required prop !== 'string',
+  push error
+  */
+
+  console.log(`CHECK HERE`);
+  console.log(last_name, typeof last_name);
+  if (
+    typeof first_name !== "string" ||
+    typeof last_name !== "string" ||
+    typeof nick_name !== "string" ||
+    typeof phone !== "string" ||
+    typeof address_line1 !== "string" ||
+    typeof city_locality !== "string" ||
+    typeof state_province !== "string" ||
+    typeof postal_code !== "string" ||
+    typeof country_code !== "string"
+  ) {
+    errors.push({
+      status: "error",
+      message: "value sent in required property is not a string",
       code: 400,
     });
   }
@@ -155,10 +182,12 @@ const createWarehouse = async (req, res) => {
   }
 
   const starterChunk = "INSERT INTO OrderPost_warehouses";
-  // initialize with required props
+  // initialize with "required" props
   const columns = [
+    "user_id",
     "first_name",
     "last_name",
+    "nick_name",
     "phone",
     "address_line1",
     "city_locality",
@@ -167,8 +196,10 @@ const createWarehouse = async (req, res) => {
     "country_code",
   ];
   const values = [
+    userId,
     first_name,
     last_name,
+    nick_name,
     phone,
     address_line1,
     city_locality,
@@ -177,6 +208,7 @@ const createWarehouse = async (req, res) => {
     country_code,
   ];
   // missing: email, company_name, address_line2, address_line3, address_residential_indicator
+  // for these non-"required" properties, I don't have any explicit error handling if they're the wrong data type, but I just won't write them to DB
   if (email && typeof email === "string") {
     columns.push("email");
     values.push(email);
@@ -206,24 +238,81 @@ const createWarehouse = async (req, res) => {
   )}) VALUES (${valuesLength.join(", ")})`;
   // prettier did a gross thing there
   console.log(sql);
-  /*
-INSERT INTO OrderPost_warehouses
-
-(user_id, first_name, last_name, nick_name, phone, email, company_name, address_line1, address_line2, address_line3, city_locality, state_province, postal_code, country_code, address_residential_indicator)
-
-VALUES (1, "Austin", "Covey", "Default Warehouse", "512-545-3322", "austincovey.dev@gmail.com", "OrderPost", "500 W William Cannon dr", NULL, NULL, "Austin", "TX", "78745", "US", FALSE);
-  */
-
-  // still testing
-  res.json(req.body);
 
   // use async pattern to retrieve warehouse by ID here
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, values);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  // if here, INSERT was successful
+  getWarehouseById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        warehouseId: updatedResults.insertId,
+      },
+    },
+    // (getWarehouseById still needs access to createWarehouse's res parameter)
+    res
+    // the response from getWarehouseById becomes the response of createWarehouse
+  );
 };
 
 const deleteWarehouse = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+  const userId = req.userInfo.userId;
+  const warehouseId = +req.params.warehouseId;
+  const errors = [];
+
+  const checkNaN = isNaN(warehouseId);
+
+  if (checkNaN) {
+    errors.push({
+      status: "error",
+      message: "warehouseId is not a number",
+      code: 400,
+    });
+  }
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  let sql =
+    "DELETE FROM OrderPost_warehouses WHERE warehouse_id = ? AND user_id = ?";
+
+  const params = [warehouseId, userId];
+  db.query(sql, params, (err, dbResponse) => {
+    if (err) {
+      console.log(`an error occurred, `, err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
+    } else if (dbResponse.affectedRows === 0) {
+      res.status(400).json({
+        errors: {
+          status: "error",
+          message: "invalid warehouse_id",
+          code: 400,
+        },
+      });
+    } else {
+      res.json({ message: "warehouse deleted successfully" });
+    }
+  });
 };
 
 module.exports = {

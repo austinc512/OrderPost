@@ -19,7 +19,7 @@ Warehouse objects hold address information for the location(s) a user ships pack
 - POST /warehouses/verify - address information is sent to ShipEngine's Address Validation endpoint, and the response from ShipEngine is passed along to the client.
   - The client can accept or reject any updates coming back from ShipEngine.
 - POST /warehouses/ - depending on accept/reject from the above, an address will be written into the database.
-  - Because of this client/server interaction, I think I'll also opt to only support POST requests on this endpoint, not PATCH requests.
+  - Regardless, I'm still forcing the user to go through the address validation process. I will also opt to allow for wareouse creation, but I will not support updating warehouse objects. The user will have to create a new warehouse if they want to update address info, thereby forcing them to go through address validation again, even if they want to reject those updates.
 - DELETE /warehouses/:warehouseId - delete an existing warehouse object.
 
 ### customers:
