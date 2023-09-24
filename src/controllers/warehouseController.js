@@ -216,6 +216,8 @@ VALUES (1, "Austin", "Covey", "Default Warehouse", "512-545-3322", "austincovey.
 
   // still testing
   res.json(req.body);
+
+  // use async pattern to retrieve warehouse by ID here
 };
 
 const deleteWarehouse = (req, res) => {
