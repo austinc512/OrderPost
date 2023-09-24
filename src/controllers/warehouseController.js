@@ -2,15 +2,80 @@ const db = require("../sql/db");
 const { validateAddress } = require("../utils/shipEngineAPI");
 
 const listWarehouses = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+  // there shouldn't be 10,000 warehouses
+  // so I'm just gonna return all for the user
+  // The specter of ShipStation is laughing at me
+  const userId = [req.userInfo.userId];
+  const sql = "SELECT * FROM OrderPost_warehouses WHERE user_id = ?";
+
+  db.query(sql, userId, (err, rows) => {
+    if (err) {
+      console.error("SELECT * FROM OrderPost_warehouses failed:");
+      console.log(err);
+      return res.status(500).json({
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      });
+    } else {
+      res.json({
+        data: rows,
+      });
+    }
+  });
 };
 
 const getWarehouseById = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+  const userId = req.userInfo.userId;
+  const warehouseId = +req.params.warehouseId;
+  console.log(`making sure`);
+  console.log({ userId, warehouseId });
+
+  const errors = [];
+  const checkNaN = isNaN(warehouseId);
+  if (checkNaN) {
+    errors.push({
+      status: "error",
+      message: "warehouseId is not a number",
+      code: 400,
+    });
+  }
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+  let sql =
+    "SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ?";
+  const params = [userId, warehouseId];
+  db.query(sql, params, (err, rows) => {
+    if (err) {
+      console.log(
+        `SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ? failed:`
+      );
+      console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
+    } else {
+      if (rows.length === 0) {
+        res.status(400).json({
+          errors: {
+            status: "error",
+            message: "There are no warehouses with this warehouse_id",
+            code: 400,
+          },
+        });
+        return;
+      } else {
+        console.log(`SELECT from OrderPost_warehouses by ID was successful:`);
+        console.log(rows);
+        res.json(rows[0]);
+      }
+    }
+  });
 };
 
 const verifyWarehouse = async (req, res) => {
