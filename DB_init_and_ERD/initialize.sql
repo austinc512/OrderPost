@@ -107,7 +107,7 @@ CREATE TABLE OrderPost_orders (
     total_amount DECIMAL (10,2),
         -- The first argument specifies the maximum number of digits, while the second argument specifies how many should appear after the decimal. The number of digits before the decimal is determined by the first value subtracted by the second.
     order_status VARCHAR (15),
-    ship_by_date DECIMAL (10,2),
+    ship_by_date CHAR(24),
     carrier_code VARCHAR (15),
     service_code VARCHAR (15),
     package_code VARCHAR (15),
@@ -159,7 +159,7 @@ CREATE TABLE OrderPost_shipments (
         -- Date.prototype.toISOString()
     total_amount DECIMAL (10,2),
         -- The first argument specifies the maximum number of digits, while the second argument specifies how many should appear after the decimal. The number of digits before the decimal is determined by the first value subtracted by the second.
-    ship_by_date DECIMAL (10,2),
+    ship_by_date CHAR(24),
     carrier_code VARCHAR (15),
     service_code VARCHAR (15),
     package_code VARCHAR (15),
