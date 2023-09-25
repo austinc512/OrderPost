@@ -376,9 +376,37 @@ const deleteCustomer = (req, res) => {
 
 const getCustomerAddresses = (req, res) => {
   // GET /customers/:customerId/addresses
-  //
   const customerId = +req.params.customerId;
-  res.json(`Coming Soon!`);
+  const userId = req.userInfo.userId;
+
+  // The SQL query joins the OrderPost_ship_to and OrderPost_customers tables
+  // to ensure the customer_id matches the user_id before selecting the addresses.
+  const sql = `
+    SELECT s.* 
+    FROM OrderPost_ship_to AS s
+    JOIN OrderPost_customers AS c ON s.customer_id = c.customer_id
+    WHERE s.customer_id = ? AND c.user_id = ?;
+  `;
+
+  // The SQL query would require both customerId and userId as parameters.
+  db.query(sql, [customerId, userId], (err, results) => {
+    if (err) {
+      // Handle error
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
+    }
+    // Send the addresses corresponding to the specified customer and user
+    res.json({ data: results });
+  });
+};
+
+const verifyCustomerAddress = async (req, res) => {
+  // do something
 };
 
 const createCustomerAddress = async (req, res) => {
@@ -399,11 +427,11 @@ const getAddressById = (req, res) => {
   res.json(`Coming Soon!`);
 };
 
-const updateAddressById = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
-};
+// const updateAddressById = (req, res) => {
+//   // creating scaffolding
+//   // will implement later
+//   res.json(`Coming Soon!`);
+// };
 
 const deleteAddressById = (req, res) => {
   // creating scaffolding
@@ -418,8 +446,8 @@ module.exports = {
   updateCustomer,
   deleteCustomer,
   getCustomerAddresses,
+  verifyCustomerAddress,
   createCustomerAddress,
   getAddressById,
-  updateAddressById,
   deleteAddressById,
 };

@@ -38,6 +38,12 @@ router.get(
 );
 
 router.post(
+  "/:customerId/addresses/verify",
+  auths.checkJWT,
+  customersControllers.verifyCustomerAddress
+);
+
+router.post(
   "/:customerId/addresses",
   auths.checkJWT,
   customersControllers.createCustomerAddress
@@ -49,11 +55,11 @@ router.get(
   customersControllers.getAddressById
 );
 
-router.patch(
-  "/:customerId/addresses/:addressId",
-  auths.checkJWT,
-  customersControllers.updateAddressById
-);
+// router.patch(
+//   "/:customerId/addresses/:addressId",
+//   auths.checkJWT,
+//   customersControllers.updateAddressById
+// );
 
 router.delete(
   "/:customerId/addresses/:addressId",

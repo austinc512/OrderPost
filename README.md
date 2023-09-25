@@ -40,9 +40,10 @@ There are many other query parameters I could implement on the customers endpoin
 One customers can have multiple ship-to addresses. In other words, the OrderPost_customers table has a One-to-Many relationship with the OrderPost_ship_to table. For this reason, these addresses are accessed through a path under the customers endpoint.
 
 - GET /customers/:customerId/addresses - returns an array of existing ship-to addresses for a customerId.
-- POST /customers/:customerId/addresses - pass in address information to create a ship-to object for that customerId.
+- POST /customers/:customerId/addresses/verify - Pass address to ShipEngine for address validation.
+- POST /customers/:customerId/addresses - Similar to Warehouses, this endpoint will be hit AFTER verifying the addess. The user still has the opportunity to accept/reject any updates coming back from ShipEngine
+  - Also similar to Warehouses, I think this also means I will not support updating customer addresses, so that any new address information has to pass through Address Validation.
 - GET /customers/:customerId/addresses/:addressId - returns a single ship-to object by its addressId.
-- PATCH /customers/:customerId/addresses/:addressId - update a ship-to object by its addressId.
 - DELETE /customers/:customerId/addresses/:addressId - update a ship-to object by its addressId.
 
 ### products:
