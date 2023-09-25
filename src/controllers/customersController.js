@@ -443,7 +443,7 @@ const createCustomerAddress = async (req, res) => {
     });
   }
 
-  // if results, validate API request data
+  // if it's a valid customer_id, validate API request data
   const errors = [];
   const {
     first_name,
@@ -489,7 +489,7 @@ const createCustomerAddress = async (req, res) => {
   ) {
     errors.push({
       status: "error",
-      message: "value of a required property is not a string",
+      message: "value of a required property is not of type string",
       code: 400,
     });
   }
@@ -501,7 +501,7 @@ const createCustomerAddress = async (req, res) => {
   const starterChunk = "INSERT INTO OrderPost_ship_to";
 
   const columns = [
-    "customerId",
+    "customer_id",
     "first_name",
     "last_name",
     "phone",
@@ -522,7 +522,6 @@ const createCustomerAddress = async (req, res) => {
     postal_code,
     country_code,
   ];
-  // missing: email, company_name, address_line2, address_line3, address_residential_indicator
   // for these non-"required" properties, I don't have any explicit error handling if they're the wrong data type, but I just won't write them to DB
   if (email && typeof email === "string") {
     columns.push("email");
@@ -553,25 +552,176 @@ const createCustomerAddress = async (req, res) => {
   )}) VALUES (${valuesLength.join(", ")})`;
   // prettier did a gross thing there
   console.log(sql);
-  res.json(`Made it this far!!`);
-
-  // do something
+  console.log(values);
+  // res.json(`Made it this far!!`);
 
   // if valid data, then INSERT
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, values);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  // res.json(updatedResults);
+  // Need to think how I'm gonna do this next function call
+  // updatedResults.insertId is still new address_id
+  // but actually, what's the parameter called?
+
+  getAddressById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        addressId: updatedResults.insertId,
+        customerId: customerId,
+      },
+    },
+    res
+  );
 
   // const insertSQL = `INSERT INTO OrderPost_ship_to (customer_id, first_name, last_name, phone, email, company_name, address_line1, address_line2, address_line3, city_locality, state_province, postal_code, country_code address_residential_indicator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 };
 
-const getAddressById = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+const getAddressById = async (req, res) => {
+  // /:customerId/addresses/:addressId
+  const customerId = +req.params.customerId;
+  const addressId = +req.params.addressId;
+  const userId = req.userInfo.userId;
+
+  // validate that the customer_id belong to the user_id
+  const validationSql = `SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?;`;
+  let vaildationResult;
+  try {
+    vaildationResult = await db.querySync(validationSql, [customerId, userId]);
+  } catch (err) {
+    console.log(`SELECT * FROM OrderPost_customers failed:`);
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (vaildationResult.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Not a valid customer_id",
+        code: 400,
+      },
+    });
+  }
+
+  // if it's a valid customer_id, validate API request data
+  /*
+
+  const customerId = +req.params.customerId;
+  const addressId = +req.params.addressId;
+  const userId = req.userInfo.userId;
+
+  */
+  const sql = `SELECT * FROM OrderPost_ship_to WHERE customer_id = ? AND ship_to_id = ?`;
+  db.query(sql, [customerId, addressId], (err, rows) => {
+    if (err) {
+      console.log(
+        `SELECT * FROM OrderPost_ship_to WHERE customer_id = ? AND ship_to_id = ?:`
+      );
+      console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal server error",
+          code: 500,
+        },
+      });
+    } else {
+      if (rows.length === 0) {
+        res.status(400).json({
+          errors: {
+            status: "error",
+            message: "There are no customer addresses with this addressId",
+            code: 400,
+          },
+        });
+        return;
+      } else {
+        console.log(`SELECT from OrderPost_ship_to by ID was successful:`);
+        console.log(rows);
+        res.json(rows[0]);
+      }
+    }
+  });
+
+  // res.json(`Coming Soon!`);
 };
 
-const deleteAddressById = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+const deleteAddressById = async (req, res) => {
+  // /:customerId/addresses/:addressId
+  const customerId = +req.params.customerId;
+  const addressId = +req.params.addressId;
+  const userId = req.userInfo.userId;
+  // validate that the customer_id belong to the user_id
+  const validationSql = `SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?;`;
+  let vaildationResult;
+  try {
+    vaildationResult = await db.querySync(validationSql, [customerId, userId]);
+  } catch (err) {
+    console.log(`SELECT * FROM OrderPost_customers failed:`);
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (vaildationResult.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Not a valid customer_id",
+        code: 400,
+      },
+    });
+  }
+
+  let sql =
+    "DELETE FROM OrderPost_ship_to WHERE customer_id = ? AND ship_to_id = ?";
+  const params = [customerId, addressId];
+  db.query(sql, params, (err, dbResponse) => {
+    if (err) {
+      console.log(`an error occurred: `);
+      console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
+    } else if (dbResponse.affectedRows === 0) {
+      res.status(400).json({
+        errors: {
+          status: "error",
+          message: "invalid customer address ID",
+          code: 400,
+        },
+      });
+    } else {
+      res.json({ message: "customer address deleted successfully" });
+    }
+  });
 };
 
 module.exports = {
