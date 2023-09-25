@@ -402,6 +402,11 @@ const getCustomerAddresses = (req, res) => {
 };
 
 const verifyCustomerAddress = async (req, res) => {
+  // RESIDENTIAL ADDRESS INDICATOR TO SHIPENGINE
+  /*
+  Default: "unknown"
+  Enum: "unknown" "yes" "no"
+  */
   const response = await validateAddress(req);
   if (response.status === 200) {
     res.json(response.data[0]);
@@ -553,7 +558,6 @@ const createCustomerAddress = async (req, res) => {
   // prettier did a gross thing there
   console.log(sql);
   console.log(values);
-  // res.json(`Made it this far!!`);
 
   // if valid data, then INSERT
   let updatedResults;
@@ -569,10 +573,6 @@ const createCustomerAddress = async (req, res) => {
       },
     });
   }
-  // res.json(updatedResults);
-  // Need to think how I'm gonna do this next function call
-  // updatedResults.insertId is still new address_id
-  // but actually, what's the parameter called?
 
   getAddressById(
     {
@@ -586,8 +586,6 @@ const createCustomerAddress = async (req, res) => {
     },
     res
   );
-
-  // const insertSQL = `INSERT INTO OrderPost_ship_to (customer_id, first_name, last_name, phone, email, company_name, address_line1, address_line2, address_line3, city_locality, state_province, postal_code, country_code address_residential_indicator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 };
 
 const getAddressById = async (req, res) => {
@@ -622,14 +620,7 @@ const getAddressById = async (req, res) => {
     });
   }
 
-  // if it's a valid customer_id, validate API request data
-  /*
-
-  const customerId = +req.params.customerId;
-  const addressId = +req.params.addressId;
-  const userId = req.userInfo.userId;
-
-  */
+  // if it's a valid customer_id, allow SELECT
   const sql = `SELECT * FROM OrderPost_ship_to WHERE customer_id = ? AND ship_to_id = ?`;
   db.query(sql, [customerId, addressId], (err, rows) => {
     if (err) {
@@ -661,8 +652,6 @@ const getAddressById = async (req, res) => {
       }
     }
   });
-
-  // res.json(`Coming Soon!`);
 };
 
 const deleteAddressById = async (req, res) => {
@@ -695,7 +684,7 @@ const deleteAddressById = async (req, res) => {
       },
     });
   }
-
+  // if it's a valid customer_id, allow DELETE
   let sql =
     "DELETE FROM OrderPost_ship_to WHERE customer_id = ? AND ship_to_id = ?";
   const params = [customerId, addressId];
