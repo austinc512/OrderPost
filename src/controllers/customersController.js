@@ -379,8 +379,7 @@ const getCustomerAddresses = (req, res) => {
   const customerId = +req.params.customerId;
   const userId = req.userInfo.userId;
 
-  // The SQL query joins the OrderPost_ship_to and OrderPost_customers tables
-  // to ensure the customer_id matches the user_id before selecting the addresses.
+  // join OrderPost_ship_to and OrderPost_customers tables to ensure the customer_id matches the user_id before selecting the addresses.
   const sql = `
     SELECT s.* 
     FROM OrderPost_ship_to AS s
@@ -388,10 +387,8 @@ const getCustomerAddresses = (req, res) => {
     WHERE s.customer_id = ? AND c.user_id = ?;
   `;
 
-  // The SQL query would require both customerId and userId as parameters.
   db.query(sql, [customerId, userId], (err, results) => {
     if (err) {
-      // Handle error
       return res.status(500).json({
         errors: {
           status: "error",
@@ -400,25 +397,169 @@ const getCustomerAddresses = (req, res) => {
         },
       });
     }
-    // Send the addresses corresponding to the specified customer and user
     res.json({ data: results });
   });
 };
 
 const verifyCustomerAddress = async (req, res) => {
-  // do something
+  const response = await validateAddress(req);
+  if (response.status === 200) {
+    res.json(response.data[0]);
+    // ^^ accessing the 0th index because my endpoint only accepts 1 address object
+  } else {
+    res
+      .status(500)
+      .json({ error: "Address Validation Failed", details: response.data });
+  }
 };
 
 const createCustomerAddress = async (req, res) => {
-  // I'll revisit this table later.
-  // I've made the ShipEngine API do the thing:
+  const customerId = +req.params.customerId;
+  const userId = req.userInfo.userId;
 
-  // const response = await validateAddress(req);
-  // res.json(response);
+  // validate that the customer_id belong to the user_id
+  const validationSql = `SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?;`;
+  let vaildationResult;
+  try {
+    vaildationResult = await db.querySync(validationSql, [customerId, userId]);
+  } catch (err) {
+    console.log(`SELECT * FROM OrderPost_customers failed:`);
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (vaildationResult.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Not a valid customer_id",
+        code: 400,
+      },
+    });
+  }
 
-  // but I should implement on warehouses first, as that's much easier.
+  // if results, validate API request data
+  const errors = [];
+  const {
+    first_name,
+    last_name,
+    phone,
+    email,
+    company_name,
+    address_line1,
+    address_line2,
+    address_line3,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+    address_residential_indicator,
+  } = req.body;
+  if (
+    !first_name ||
+    !last_name ||
+    !phone ||
+    !address_line1 ||
+    !city_locality ||
+    !state_province ||
+    !postal_code ||
+    !country_code
+  ) {
+    errors.push({
+      status: "error",
+      message:
+        "One or more required properties are missing. Requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code",
+      code: 400,
+    });
+  }
+  if (
+    typeof first_name !== "string" ||
+    typeof last_name !== "string" ||
+    typeof phone !== "string" ||
+    typeof address_line1 !== "string" ||
+    typeof city_locality !== "string" ||
+    typeof state_province !== "string" ||
+    typeof postal_code !== "string" ||
+    typeof country_code !== "string"
+  ) {
+    errors.push({
+      status: "error",
+      message: "value of a required property is not a string",
+      code: 400,
+    });
+  }
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
 
-  res.json(`coming soon!`);
+  const starterChunk = "INSERT INTO OrderPost_ship_to";
+
+  const columns = [
+    "customerId",
+    "first_name",
+    "last_name",
+    "phone",
+    "address_line1",
+    "city_locality",
+    "state_province",
+    "postal_code",
+    "country_code",
+  ];
+  const values = [
+    customerId,
+    first_name,
+    last_name,
+    phone,
+    address_line1,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+  ];
+  // missing: email, company_name, address_line2, address_line3, address_residential_indicator
+  // for these non-"required" properties, I don't have any explicit error handling if they're the wrong data type, but I just won't write them to DB
+  if (email && typeof email === "string") {
+    columns.push("email");
+    values.push(email);
+  }
+  if (company_name && typeof company_name === "string") {
+    columns.push("company_name");
+    values.push(company_name);
+  }
+  if (address_line2 && typeof address_line2 === "string") {
+    columns.push("address_line2");
+    values.push(address_line2);
+  }
+  if (address_line3 && typeof address_line3 === "string") {
+    columns.push("address_line3");
+    values.push(address_line3);
+  }
+  if (
+    address_residential_indicator &&
+    typeof address_residential_indicator === "boolean"
+  ) {
+    columns.push("address_residential_indicator");
+    values.push(address_residential_indicator);
+  }
+  const valuesLength = new Array(values.length).fill("?");
+  let sql = `${starterChunk} (${columns.join(
+    ", "
+  )}) VALUES (${valuesLength.join(", ")})`;
+  // prettier did a gross thing there
+  console.log(sql);
+  res.json(`Made it this far!!`);
+
+  // do something
+
+  // if valid data, then INSERT
+
+  // const insertSQL = `INSERT INTO OrderPost_ship_to (customer_id, first_name, last_name, phone, email, company_name, address_line1, address_line2, address_line3, city_locality, state_province, postal_code, country_code address_residential_indicator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 };
 
 const getAddressById = (req, res) => {
@@ -426,12 +567,6 @@ const getAddressById = (req, res) => {
   // will implement later
   res.json(`Coming Soon!`);
 };
-
-// const updateAddressById = (req, res) => {
-//   // creating scaffolding
-//   // will implement later
-//   res.json(`Coming Soon!`);
-// };
 
 const deleteAddressById = (req, res) => {
   // creating scaffolding

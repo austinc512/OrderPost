@@ -171,7 +171,7 @@ const createWarehouse = async (req, res) => {
   ) {
     errors.push({
       status: "error",
-      message: "value sent in required property is not a string",
+      message: "value of a required property is not a string",
       code: 400,
     });
   }
