@@ -22,8 +22,8 @@ const listOrders = (req, res) => {
     if data.length < size, disable next page button.
     */
 
-  console.log(req.query.size);
-  console.log(req.query.orderStatus);
+  // console.log(req.query.size);
+  // console.log(req.query.orderStatus);
 
   if (req.query.size) {
     size = +req.query.size;
@@ -73,28 +73,37 @@ const listOrders = (req, res) => {
   const validationSql = `SELECT o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
-  WHERE c.user_id = ? AND o.order_status = ?`;
+  WHERE c.user_id = ? AND o.order_status = ?
+  LIMIT ? OFFSET ?`;
 
   // res.json(`Coming Soon!`);
-  db.query(validationSql, [userId, orderStatus], (err, dbResponse) => {
-    if (err) {
-      console.log(`an error occurred, `, err);
-      res.status(500).json({
-        errors: {
-          status: "error",
-          message: "internal server error",
-          code: 500,
-        },
-      });
-    } else {
-      res.json({ data: dbResponse });
+  db.query(
+    validationSql,
+    [userId, orderStatus, size, offset],
+    (err, dbResponse) => {
+      if (err) {
+        console.log(`an error occurred, `, err);
+        res.status(500).json({
+          errors: {
+            status: "error",
+            message: "internal server error",
+            code: 500,
+          },
+        });
+      } else {
+        res.json({ data: dbResponse });
+      }
     }
-  });
+  );
 };
 
 const getOrderById = (req, res) => {
   // creating scaffolding
   // will implement later
+  const validationSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
   res.json(`Coming Soon!`);
 };
 
