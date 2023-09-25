@@ -379,7 +379,7 @@ const getCustomerAddresses = (req, res) => {
   const customerId = +req.params.customerId;
   const userId = req.userInfo.userId;
 
-  // join OrderPost_ship_to and OrderPost_customers tables to ensure the customer_id matches the user_id before selecting the addresses.
+  // join OrderPost_ship_to and OrderPost_customers tables to ensure the customer_id corresponds to the user_id.
   const sql = `
     SELECT s.* 
     FROM OrderPost_ship_to AS s
@@ -545,8 +545,9 @@ const createCustomerAddress = async (req, res) => {
     values.push(address_line3);
   }
   if (
-    address_residential_indicator &&
-    typeof address_residential_indicator === "boolean"
+    address_residential_indicator === "yes" ||
+    address_residential_indicator === "no" ||
+    address_residential_indicator === "unknown"
   ) {
     columns.push("address_residential_indicator");
     values.push(address_residential_indicator);

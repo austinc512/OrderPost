@@ -56,7 +56,7 @@ CREATE TABLE OrderPost_ship_to (
     state_province VARCHAR (30),
     postal_code VARCHAR (20),
     country_code VARCHAR (10),
-    address_residential_indicator BOOLEAN,
+    address_residential_indicator ENUM('yes', 'no', 'unknown'),
     FOREIGN KEY (customer_id) 
     REFERENCES OrderPost_customers (customer_id)
     ON DELETE SET NULL
@@ -78,7 +78,7 @@ CREATE TABLE OrderPost_warehouses (
     state_province VARCHAR (30),
     postal_code VARCHAR (20),
     country_code VARCHAR (10),
-    address_residential_indicator BOOLEAN,
+    address_residential_indicator ENUM('yes', 'no', 'unknown'),
     FOREIGN KEY (user_id) 
     REFERENCES OrderPost_users (user_id)
     ON DELETE SET NULL

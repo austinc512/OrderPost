@@ -226,8 +226,9 @@ const createWarehouse = async (req, res) => {
     values.push(address_line3);
   }
   if (
-    address_residential_indicator &&
-    typeof address_residential_indicator === "boolean"
+    address_residential_indicator === "yes" ||
+    address_residential_indicator === "no" ||
+    address_residential_indicator === "unknown"
   ) {
     columns.push("address_residential_indicator");
     values.push(address_residential_indicator);
