@@ -224,6 +224,30 @@ const createOrder = async (req, res) => {
   order_date, total_amount, order_status, ship_by_date, carrier_code, service_code, package_code, confirmation, order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units,
   */
 
+  // I was gonna do .toISOString for dates, but there's better approaches
+  // I can still write validation for all the other shit first.
+
+  // dates: order_date, ship_by_date,
+
+  // total_amount
+
+  // order_status
+  // what are the enum values?
+  // it's just a fucking varchar
+  // what do I want? "unshipped"  or "shipped"
+  if (order_status) {
+    // if valid status
+    // order_status should have possible values: "shipped", "unshipped"
+    if (order_status !== "shipped" && order_status !== "unshipped") {
+      errors.push({
+        status: "error",
+        message:
+          "Invalid order_status property. possible values: shipped, unshipped",
+        code: 400,
+      });
+    }
+  }
+
   if (errors.length) {
     return res.status(400).json({ errors });
   }
