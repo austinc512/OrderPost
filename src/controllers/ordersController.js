@@ -77,7 +77,8 @@ const listOrders = (req, res) => {
     [userId, orderStatus, size, offset],
     (err, dbResponse) => {
       if (err) {
-        console.log(`an error occurred, `, err);
+        console.log(`an error occurred:`);
+        console.log(err);
         res.status(500).json({
           errors: {
             status: "error",
@@ -117,9 +118,114 @@ const getOrderById = (req, res) => {
 };
 
 const createOrder = async (req, res) => {
-  // creating scaffolding
-  // will implement later
-  res.json(`Coming Soon!`);
+  const userId = req.userInfo.userId;
+  const {
+    customer_id,
+    order_number,
+    order_date,
+    total_amount,
+    order_status,
+    ship_by_date,
+    carrier_code,
+    service_code,
+    package_code,
+    confirmation,
+    order_weight,
+    weight_units,
+    dimension_x,
+    dimension_y,
+    dimension_z,
+    dimension_units,
+    warehouse_id,
+  } = req.body;
+
+  let errors = [];
+  // most of these are optional
+  // but I have to validate all variables of this SOB
+  // order_number might be the only one that is truly required
+  if (typeof order_number !== "string") {
+    errors.push({
+      status: "error",
+      message: "order number must be a string",
+      code: 400,
+    });
+  }
+  if (
+    (typeof order_number === "string" && order_number.length === 0) ||
+    order_number.length > 20
+  ) {
+    errors.push({
+      status: "error",
+      message: "order number must be between 1 and 15 characters long",
+      code: 400,
+    });
+  }
+  // customer_id must correspond to user_id
+  if (customer_id) {
+    // validate
+    const customerSql =
+      "SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?";
+    const customerParams = [customer_id, userId];
+    let customerResults;
+    try {
+      customerResults = await await db.querySync(customerSql, customerParams);
+      console.log(customerResults.length);
+      if (customerResults.length === 0) {
+        {
+          errors.push({
+            status: "error",
+            message: "invalid customer_id",
+            code: 400,
+          });
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      });
+    }
+  }
+
+  // warehouse_id must correspond to user_id
+  if (warehouse_id) {
+    const warehouseSql =
+      "SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ?";
+    const warehouseParams = [userId, warehouse_id];
+    let warehouseResults;
+    try {
+      warehouseResults = await db.querySync(warehouseSql, warehouseParams);
+      // console.log(warehouseResults.length);
+      if (warehouseResults.length === 0) {
+        errors.push({
+          status: "error",
+          message: "invalid warehouse_id",
+          code: 400,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      });
+    }
+  }
+
+  // if here, order_number is valid, and warehouse_id and customer_id are either valid or do not exist on the order object being passed to this endpoint.
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  res.json(`Made it to the end!`);
 };
 
 const updateOrder = (req, res) => {
