@@ -162,9 +162,15 @@ const createOrder = async (req, res) => {
     dimension_z,
     dimension_units,
   });
+
   if (utilsCheck) {
     errors.push(...utilsCheck);
   }
+
+  // A note about service_code:
+  // frontend should have logic to only show the relevant service_codes I support based on carrier_code
+  // I'm not writing the conditional logic to match carrier/service for my MVP
+
   // DB error checks
 
   // customer_id must correspond to user_id
@@ -224,28 +230,19 @@ const createOrder = async (req, res) => {
     }
   }
 
-  // if here, order_number is valid, and warehouse_id and customer_id are either valid or do not exist on the order object being passed to this endpoint.
-
-  /*
-  Now check:
-  order_date, total_amount, order_status, ship_by_date, carrier_code, service_code, package_code, confirmation, order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units,
-  */
-
   if (errors.length) {
     return res.status(400).json({ errors });
   }
 
-  // coercing some values to Number
   // If here, then all values have passed validation
-  // validation attempts to coerce to number
-  // but I need that back here in the primary function as well.
+  // validation attempts to coerce some values to Number
+  // but I need those Numbers back here in the primary function as well.
+  // (this allows for numbers as strings to still be valid)
   total_amount = +total_amount;
   order_weight = +order_weight;
   dimension_x = +dimension_x;
   dimension_y = +dimension_y;
   dimension_z = +dimension_z;
-
-  // separate concerns. Do data validation first, then do sql construction.
 
   res.json(`Made it to the end!`);
 };

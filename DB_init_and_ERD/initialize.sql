@@ -109,7 +109,7 @@ CREATE TABLE OrderPost_orders (
     order_status VARCHAR (15),
     ship_by_date CHAR(24),
     carrier_code VARCHAR (15),
-    service_code VARCHAR (15),
+    service_code VARCHAR (30),
     package_code VARCHAR (15),
     confirmation VARCHAR (15),
     order_weight DECIMAL (6,2),
@@ -161,7 +161,7 @@ CREATE TABLE OrderPost_shipments (
         -- The first argument specifies the maximum number of digits, while the second argument specifies how many should appear after the decimal. The number of digits before the decimal is determined by the first value subtracted by the second.
     ship_by_date CHAR(24),
     carrier_code VARCHAR (15),
-    service_code VARCHAR (15),
+    service_code VARCHAR (30),
     package_code VARCHAR (15),
     confirmation VARCHAR (15),
     order_weight DECIMAL (6,2),

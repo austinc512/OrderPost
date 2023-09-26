@@ -17,6 +17,10 @@ const validateOrderInfo = (order) => {
     dimension_units,
   } = order;
 
+  // A note about service_code:
+  // frontend should have logic to only show the relevant service_codes I support based on carrier_code
+  // I'm not writing the conditional logic to match carrier/service for my MVP
+
   const errors = [];
   if (typeof order_number !== "string") {
     errors.push({
@@ -102,6 +106,17 @@ const validateOrderInfo = (order) => {
         status: "error",
         message:
           "Invalid carrier_code. Possible values are: 'stamps_com', 'fedex', or 'ups'.",
+        code: 400,
+      });
+    }
+  }
+
+  if (service_code) {
+    if (typeof service_code !== "string" || service_code.length > 30) {
+      errors.push({
+        status: "error",
+        message:
+          "Invalid service_code. It must be a string <= 30 characters in length",
         code: 400,
       });
     }
