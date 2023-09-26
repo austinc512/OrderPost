@@ -1,5 +1,7 @@
 const db = require("../sql/db");
 
+const { validateOrderInfo } = require("../utils/orderUtils");
+
 const listOrders = (req, res) => {
   /*
     - GET /orders - return an array of orders (default size = 100)
@@ -117,9 +119,10 @@ const getOrderById = (req, res) => {
   });
 };
 
+// NEW VERSION
 const createOrder = async (req, res) => {
   const userId = req.userInfo.userId;
-  const {
+  let {
     customer_id,
     order_number,
     order_date,
@@ -140,26 +143,30 @@ const createOrder = async (req, res) => {
   } = req.body;
 
   let errors = [];
-  // most of these are optional
-  // but I have to validate all variables of this SOB
-  // order_number might be the only one that is truly required
-  if (typeof order_number !== "string") {
-    errors.push({
-      status: "error",
-      message: "order number must be a string",
-      code: 400,
-    });
+
+  // utils error checks
+  const utilsCheck = validateOrderInfo({
+    order_number,
+    order_date,
+    total_amount,
+    order_status,
+    ship_by_date,
+    carrier_code,
+    service_code,
+    package_code,
+    confirmation,
+    order_weight,
+    weight_units,
+    dimension_x,
+    dimension_y,
+    dimension_z,
+    dimension_units,
+  });
+  if (utilsCheck) {
+    errors.push(...utilsCheck);
   }
-  if (
-    (typeof order_number === "string" && order_number.length === 0) ||
-    order_number.length > 20
-  ) {
-    errors.push({
-      status: "error",
-      message: "order number must be between 1 and 15 characters long",
-      code: 400,
-    });
-  }
+  // DB error checks
+
   // customer_id must correspond to user_id
   if (customer_id) {
     const customerSql =
@@ -167,7 +174,7 @@ const createOrder = async (req, res) => {
     const customerParams = [customer_id, userId];
     let customerResults;
     try {
-      customerResults = await await db.querySync(customerSql, customerParams);
+      customerResults = await db.querySync(customerSql, customerParams);
       console.log(customerResults.length);
       if (customerResults.length === 0) {
         {
@@ -224,33 +231,21 @@ const createOrder = async (req, res) => {
   order_date, total_amount, order_status, ship_by_date, carrier_code, service_code, package_code, confirmation, order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units,
   */
 
-  // I was gonna do .toISOString for dates, but there's better approaches
-  // I can still write validation for all the other shit first.
-
-  // dates: order_date, ship_by_date,
-
-  // total_amount
-
-  // order_status
-  // what are the enum values?
-  // it's just a fucking varchar
-  // what do I want? "unshipped"  or "shipped"
-  if (order_status) {
-    // if valid status
-    // order_status should have possible values: "shipped", "unshipped"
-    if (order_status !== "shipped" && order_status !== "unshipped") {
-      errors.push({
-        status: "error",
-        message:
-          "Invalid order_status property. possible values: shipped, unshipped",
-        code: 400,
-      });
-    }
-  }
-
   if (errors.length) {
     return res.status(400).json({ errors });
   }
+
+  // coercing some values to Number
+  // If here, then all values have passed validation
+  // validation attempts to coerce to number
+  // but I need that back here in the primary function as well.
+  total_amount = +total_amount;
+  order_weight = +order_weight;
+  dimension_x = +dimension_x;
+  dimension_y = +dimension_y;
+  dimension_z = +dimension_z;
+
+  // separate concerns. Do data validation first, then do sql construction.
 
   res.json(`Made it to the end!`);
 };
