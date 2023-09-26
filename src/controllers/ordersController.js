@@ -1,7 +1,6 @@
 const db = require("../sql/db");
 
 const listOrders = (req, res) => {
-  // this one will take at least a size query param
   /*
     - GET /orders - return an array of orders (default size = 100)
     - GET /orders?size={size} - query param allowing you to change the size returned (max size = 500).
@@ -21,9 +20,6 @@ const listOrders = (req, res) => {
   
     if data.length < size, disable next page button.
     */
-
-  // console.log(req.query.size);
-  // console.log(req.query.orderStatus);
 
   if (req.query.size) {
     size = +req.query.size;
@@ -76,7 +72,6 @@ const listOrders = (req, res) => {
   WHERE c.user_id = ? AND o.order_status = ?
   LIMIT ? OFFSET ?`;
 
-  // res.json(`Coming Soon!`);
   db.query(
     validationSql,
     [userId, orderStatus, size, offset],
@@ -98,16 +93,30 @@ const listOrders = (req, res) => {
 };
 
 const getOrderById = (req, res) => {
-  // creating scaffolding
-  // will implement later
-  const validationSql = `SELECT o.*
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const sql = `SELECT o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
   WHERE c.user_id = ? AND o.order_id = ?`;
-  res.json(`Coming Soon!`);
+  db.query(sql, [userId, orderId], (err, dbResponse) => {
+    if (err) {
+      console.log(`an error occurred:`);
+      console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
+    } else {
+      res.json({ data: dbResponse[0] });
+    }
+  });
 };
 
-const createOrder = (req, res) => {
+const createOrder = async (req, res) => {
   // creating scaffolding
   // will implement later
   res.json(`Coming Soon!`);
