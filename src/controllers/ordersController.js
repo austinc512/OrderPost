@@ -162,7 +162,6 @@ const createOrder = async (req, res) => {
   }
   // customer_id must correspond to user_id
   if (customer_id) {
-    // validate
     const customerSql =
       "SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?";
     const customerParams = [customer_id, userId];
@@ -199,7 +198,6 @@ const createOrder = async (req, res) => {
     let warehouseResults;
     try {
       warehouseResults = await db.querySync(warehouseSql, warehouseParams);
-      // console.log(warehouseResults.length);
       if (warehouseResults.length === 0) {
         errors.push({
           status: "error",
@@ -220,6 +218,11 @@ const createOrder = async (req, res) => {
   }
 
   // if here, order_number is valid, and warehouse_id and customer_id are either valid or do not exist on the order object being passed to this endpoint.
+
+  /*
+  Now check:
+  order_date, total_amount, order_status, ship_by_date, carrier_code, service_code, package_code, confirmation, order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units,
+  */
 
   if (errors.length) {
     return res.status(400).json({ errors });
