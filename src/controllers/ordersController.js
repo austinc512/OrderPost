@@ -2,6 +2,14 @@ const db = require("../sql/db");
 
 const { validateOrderInfo } = require("../utils/orderUtils");
 
+/*
+
+Notes:
+There is a large amount of abstraction that needs to take place in this file.
+there's a lot of recycled lines of code, and I'll clean this up later.
+
+*/
+
 const listOrders = (req, res) => {
   /*
     - GET /orders - return an array of orders (default size = 100)
@@ -67,7 +75,8 @@ const listOrders = (req, res) => {
   if (errors.length) {
     return res.status(400).json({ errors });
   }
-
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  // ACTUALLY THIS ONE IS A BIT DIFFERENT
   const validationSql = `SELECT o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
@@ -98,6 +107,7 @@ const listOrders = (req, res) => {
 const getOrderById = (req, res) => {
   const userId = req.userInfo.userId;
   const orderId = +req.params.orderId;
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
   const sql = `SELECT o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
@@ -453,6 +463,7 @@ const updateOrder = async (req, res) => {
   }
 
   // 3. order_id must correspond to user_id
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
   const orderId = +req.params.orderId;
   const verifyOrderSql = `SELECT o.*
   FROM OrderPost_orders o
@@ -623,8 +634,331 @@ const updateOrder = async (req, res) => {
     },
     res
   );
+};
 
-  // res.json(`Coming Soon!`);
+// orderItems
+
+const getOrderItems = async (req, res) => {
+  // /:orderId/order-items
+
+  // order has foreign key to customer
+  // customer has foreign key to user
+
+  // product has foreign key to user
+  //    since this is a Read, I don't need to verify products belong to user
+  //    but that will need to happen elsewhere
+
+  // validate order belongs to user
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const errors = [];
+
+  // orderId --> userId
+  // 3. order_id must correspond to user_id
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  // if here, order corresponds to user
+  // then I can select order items
+  const sql = "SELECT * FROM OrderPost_order_items WHERE order_id = ?";
+
+  db.query(sql, [orderId], (err, dbResponse) => {
+    if (err) {
+      console.log(`an error occurred:`);
+      console.log(err);
+      res.status(500).json({
+        errors: {
+          status: "error",
+          message: "internal server error",
+          code: 500,
+        },
+      });
+    } else {
+      res.json({ data: dbResponse });
+    }
+  });
+};
+
+const addOrderItem = async (req, res) => {
+  // takes 1 item
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const { productId, quantity } = req.body;
+  const errors = [];
+
+  const isProductNaN = isNaN(productId);
+  if (isProductNaN) {
+    errors.push({
+      status: "error",
+      message: "productId is not a number",
+      code: 400,
+    });
+  }
+  if (
+    !isProductNaN &&
+    typeof productId === "number" &&
+    Math.trunc(productId) !== productId
+  ) {
+    errors.push({
+      status: "error",
+      message: "productId must be an integer",
+      code: 400,
+    });
+  }
+
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  // 3. order_id must correspond to user_id
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, order corresponds to user.
+
+  // product must correspond to userId
+
+  let verifyProductSql =
+    "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
+  let productResults;
+  try {
+    productResults = await db.querySync(verifyProductSql, [userId, productId]);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (productResults.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "There are no products with this product_id",
+        code: 400,
+      },
+    });
+  }
+  // if here, product_id is valid and order corresponds to user
+  // ready for insert
+  const sql = `INSERT INTO OrderPost_order_items (order_id, product_id, quantity) VALUES (?, ?, ?)`;
+  const params = [orderId, productId, quantity];
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, params);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal server error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, INSERT was successful
+  // respond with all order items
+  getOrderItems(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        orderId: orderId,
+      },
+    },
+    res
+  );
+};
+
+const updateOrderItem = async (req, res) => {
+  // takes 1 item
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const { productId, quantity } = req.body;
+  const errors = [];
+
+  const isProductNaN = isNaN(productId);
+  if (isProductNaN) {
+    errors.push({
+      status: "error",
+      message: "productId is not a number",
+      code: 400,
+    });
+  }
+  if (
+    !isProductNaN &&
+    typeof productId === "number" &&
+    Math.trunc(productId) !== productId
+  ) {
+    errors.push({
+      status: "error",
+      message: "productId must be an integer",
+      code: 400,
+    });
+  }
+
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  // 3. order_id must correspond to user_id
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, order corresponds to user.
+
+  // product must correspond to userId
+
+  let verifyProductSql =
+    "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
+  let productResults;
+  try {
+    productResults = await db.querySync(verifyProductSql, [userId, productId]);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (productResults.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "There are no products with this product_id",
+        code: 400,
+      },
+    });
+  }
+  // if here, product_id is valid and order corresponds to user
+  // ready for insert
+  const sql = `UPDATE OrderPost_order_items SET QUANTITY = ? WHERE order_id = ? AND product_id = ?`;
+  const params = [quantity, orderId, productId];
+
+  try {
+    updatedResults = await db.querySync(sql, params);
+    console.log(updatedResults.affectedRows);
+    if (updatedResults.affectedRows === 0) {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "productId does not exist on order",
+          code: 400,
+        },
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal server error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, UPDATE was successful
+  // respond with all order items
+  getOrderItems(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        orderId: orderId,
+      },
+    },
+    res
+  );
+};
+
+const deleteOrderItem = (req, res) => {
+  // takes 1 item
 };
 
 // Shipments are generated from Orders, so that function also lives here
@@ -641,4 +975,8 @@ module.exports = {
   createOrder,
   updateOrder,
   createShipment,
+  getOrderItems,
+  addOrderItem,
+  updateOrderItem,
+  deleteOrderItem,
 };

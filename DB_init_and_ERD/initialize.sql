@@ -170,6 +170,7 @@ CREATE TABLE OrderPost_shipments (
     dimension_y FLOAT (5,2),
     dimension_z FLOAT (5,2),
     dimension_units VARCHAR (5),
+    label_reference VARCHAR (100),
         -- (M,D) means than values can be stored with up to M digits in total, of which D digits may be after the decimal point
     -- still needs tracking and label_id    
      FOREIGN KEY (order_id)
