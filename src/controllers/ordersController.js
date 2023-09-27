@@ -119,7 +119,6 @@ const getOrderById = (req, res) => {
   });
 };
 
-// NEW VERSION
 const createOrder = async (req, res) => {
   const userId = req.userInfo.userId;
   let {
@@ -169,7 +168,7 @@ const createOrder = async (req, res) => {
 
   // A note about service_code:
   // frontend should have logic to only show the relevant service_codes I support based on carrier_code
-  // I'm not writing the conditional logic to match carrier/service for my MVP
+  // I'm not writing the logic to match carrier/service for my MVP
 
   // DB error checks
 
@@ -181,7 +180,7 @@ const createOrder = async (req, res) => {
     let customerResults;
     try {
       customerResults = await db.querySync(customerSql, customerParams);
-      console.log(customerResults.length);
+      // console.log(customerResults.length);
       if (customerResults.length === 0) {
         {
           errors.push({
@@ -235,7 +234,7 @@ const createOrder = async (req, res) => {
   }
 
   // If here, then all values have passed validation
-  // validation attempts to coerce some values to Number
+  // utils validation attempts to coerce some values to Number
   // but I need those Numbers back here in the primary function as well.
   // (this allows for numbers as strings to still be valid)
   total_amount = +total_amount;
@@ -244,7 +243,113 @@ const createOrder = async (req, res) => {
   dimension_y = +dimension_y;
   dimension_z = +dimension_z;
 
-  res.json(`Made it to the end!`);
+  // Now I'm ready to write some SQL
+  const starterChunk = "INSERT INTO OrderPost_orders";
+  const columns = ["order_number"];
+  const values = [order_number];
+
+  if (customer_id) {
+    columns.push("customer_id");
+    values.push(customer_id);
+  }
+  if (order_date) {
+    columns.push("order_date");
+    values.push(order_date);
+  }
+  if (total_amount) {
+    columns.push("total_amount");
+    values.push(total_amount);
+  }
+  if (order_status) {
+    columns.push("order_status");
+    values.push(order_status);
+  }
+  if (ship_by_date) {
+    columns.push("ship_by_date");
+    values.push(ship_by_date);
+  }
+  if (carrier_code) {
+    columns.push("carrier_code");
+    values.push(carrier_code);
+  }
+  if (service_code) {
+    columns.push("service_code");
+    values.push(service_code);
+  }
+  if (package_code) {
+    columns.push("package_code");
+    values.push(package_code);
+  }
+  if (confirmation) {
+    columns.push("confirmation");
+    values.push(confirmation);
+  }
+  if (order_weight) {
+    columns.push("order_weight");
+    values.push(order_weight);
+  }
+  if (weight_units) {
+    columns.push("weight_units");
+    values.push(weight_units);
+  }
+  if (dimension_x) {
+    columns.push("dimension_x");
+    values.push(dimension_x);
+  }
+  if (dimension_y) {
+    columns.push("dimension_y");
+    values.push(dimension_y);
+  }
+  if (dimension_z) {
+    columns.push("dimension_z");
+    values.push(dimension_z);
+  }
+  if (warehouse_id) {
+    columns.push("warehouse_id");
+    values.push(warehouse_id);
+  }
+  if (dimension_units) {
+    columns.push("dimension_units");
+    values.push(dimension_units);
+  }
+
+  const valuesLength = new Array(values.length).fill("?");
+  let sql = `${starterChunk} (${columns.join(
+    ", "
+  )}) VALUES (${valuesLength.join(", ")})`;
+  // prettier did a gross thing there
+  console.log(sql);
+  console.log(values);
+
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, values);
+    console.log(updatedResults);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  // if here, INSERT was successful
+
+  getOrderById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        orderId: updatedResults.insertId,
+      },
+    },
+    res
+  );
+
+  // res.json(`Made it to the end!`);
 };
 
 const updateOrder = (req, res) => {

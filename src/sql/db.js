@@ -36,21 +36,22 @@ connection.querySync = async (sql, params) => {
     console.log(`executing query, ${sql}`);
     connection.query(sql, params, (err, results) => {
       if (err) {
-        console.log(`rejecting`);
+        // console.log(`rejecting`);
         return reject(err);
       } else {
-        console.log(`resolving`);
+        // console.log(`resolving`);
         return resolve(results);
       }
     });
   });
   let results = await promise
     .then((results) => {
-      console.log(`results, ${results}`);
+      // console.log(`results, ${results}`);
       return results;
     })
     .catch((err) => {
-      throw err;
+      console.log(`db.js catch block err:`);
+      console.log(err);
     });
   return results;
 };

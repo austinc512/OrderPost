@@ -118,8 +118,8 @@ CREATE TABLE OrderPost_orders (
     dimension_y FLOAT (5,2),
     dimension_z FLOAT (5,2),
     dimension_units VARCHAR (5),
-    warehouses_id INT,
-    FOREIGN KEY (warehouses_id)
+    warehouse_id INT,
+    FOREIGN KEY (warehouse_id)
     REFERENCES OrderPost_warehouses (warehouse_id)
     ON DELETE SET NULL,
         -- (M,D) means than values can be stored with up to M digits in total, of which D digits may be after the decimal point

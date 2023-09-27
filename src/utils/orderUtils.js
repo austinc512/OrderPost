@@ -39,6 +39,7 @@ const validateOrderInfo = (order) => {
       code: 400,
     });
   }
+  // effectively this makes orderNumber a required property of the API request
 
   if (order_date) {
     const testDate = new Date(order_date);
