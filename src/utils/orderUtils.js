@@ -22,8 +22,6 @@ const validateOrderInfo = (order) => {
 
   const errors = [];
 
-  // effectively this makes orderNumber a required property of the API request
-
   if (order_date) {
     const testDate = new Date(order_date);
     if (isNaN(testDate)) {
