@@ -957,8 +957,135 @@ const updateOrderItem = async (req, res) => {
   );
 };
 
-const deleteOrderItem = (req, res) => {
+const deleteOrderItem = async (req, res) => {
   // takes 1 item
+  // takes 1 item
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const { productId } = req.body;
+  const errors = [];
+
+  const isProductNaN = isNaN(productId);
+  if (isProductNaN) {
+    errors.push({
+      status: "error",
+      message: "productId is not a number",
+      code: 400,
+    });
+  }
+  if (
+    !isProductNaN &&
+    typeof productId === "number" &&
+    Math.trunc(productId) !== productId
+  ) {
+    errors.push({
+      status: "error",
+      message: "productId must be an integer",
+      code: 400,
+    });
+  }
+
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  // 3. order_id must correspond to user_id
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  const verifyOrderSql = `SELECT o.*
+   FROM OrderPost_orders o
+   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+   WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, order corresponds to user.
+
+  // product must correspond to userId
+
+  let verifyProductSql =
+    "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
+  let productResults;
+  try {
+    productResults = await db.querySync(verifyProductSql, [userId, productId]);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (productResults.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "There are no products with this product_id",
+        code: 400,
+      },
+    });
+  }
+  // if here, product_id is valid and order corresponds to user
+  // ready for DELETE
+  let deleteSql =
+    "DELETE FROM OrderPost_order_items where order_id = ? AND product_id = ?";
+  const deleteParams = [orderId, productId];
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(deleteSql, deleteParams);
+    if (updatedResults.affectedRows === 0) {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "productId does not exist on order",
+          code: 400,
+        },
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // if here, DELETE was successful
+  // respond with all order items
+  getOrderItems(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        orderId: orderId,
+      },
+    },
+    res
+  );
 };
 
 // Shipments are generated from Orders, so that function also lives here
