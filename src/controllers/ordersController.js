@@ -170,9 +170,9 @@ const createOrder = async (req, res) => {
   // frontend should have logic to only show the relevant service_codes I support based on carrier_code
   // I'm not writing the logic to match carrier/service for my MVP
 
-  // DB error checks
+  // DB error checks:
 
-  // customer_id must correspond to user_id
+  // 1. customer_id must correspond to user_id
   if (customer_id) {
     const customerSql =
       "SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?";
@@ -202,7 +202,7 @@ const createOrder = async (req, res) => {
     }
   }
 
-  // warehouse_id must correspond to user_id
+  // 2. warehouse_id must correspond to user_id
   if (warehouse_id) {
     const warehouseSql =
       "SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ?";
@@ -352,9 +352,146 @@ const createOrder = async (req, res) => {
   // res.json(`Made it to the end!`);
 };
 
-const updateOrder = (req, res) => {
-  // creating scaffolding
-  // will implement later
+const updateOrder = async (req, res) => {
+  const userId = req.userInfo.userId;
+  let {
+    customer_id,
+    order_number,
+    order_date,
+    total_amount,
+    order_status,
+    ship_by_date,
+    carrier_code,
+    service_code,
+    package_code,
+    confirmation,
+    order_weight,
+    weight_units,
+    dimension_x,
+    dimension_y,
+    dimension_z,
+    dimension_units,
+    warehouse_id,
+  } = req.body;
+
+  let errors = [];
+
+  // utils error checks
+  const utilsCheck = validateOrderInfo({
+    order_number,
+    order_date,
+    total_amount,
+    order_status,
+    ship_by_date,
+    carrier_code,
+    service_code,
+    package_code,
+    confirmation,
+    order_weight,
+    weight_units,
+    dimension_x,
+    dimension_y,
+    dimension_z,
+    dimension_units,
+  });
+
+  if (utilsCheck) {
+    errors.push(...utilsCheck);
+  }
+
+  // DB error checks:
+
+  // 1. customer_id must correspond to user_id
+  if (customer_id) {
+    const customerSql =
+      "SELECT * FROM OrderPost_customers WHERE customer_id = ? AND user_id = ?";
+    const customerParams = [customer_id, userId];
+    let customerResults;
+    try {
+      customerResults = await db.querySync(customerSql, customerParams);
+      // console.log(customerResults.length);
+      if (customerResults.length === 0) {
+        {
+          errors.push({
+            status: "error",
+            message: "invalid customer_id",
+            code: 400,
+          });
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      });
+    }
+  }
+
+  // 2. warehouse_id must correspond to user_id
+  if (warehouse_id) {
+    const warehouseSql =
+      "SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ?";
+    const warehouseParams = [userId, warehouse_id];
+    let warehouseResults;
+    try {
+      warehouseResults = await db.querySync(warehouseSql, warehouseParams);
+      if (warehouseResults.length === 0) {
+        errors.push({
+          status: "error",
+          message: "invalid warehouse_id",
+          code: 400,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        errors: {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      });
+    }
+  }
+
+  // 3. order_id must correspond to user_id
+  const orderId = +req.params.orderId;
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid warehouse_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+  // if here, order data is valid.
+  // I will not allow updates to order_number
+  //
+
   res.json(`Coming Soon!`);
 };
 

@@ -73,11 +73,15 @@ const validateOrderInfo = (order) => {
 
   // possible values for order_status: "shipped", "unshipped"
   if (order_status) {
-    if (order_status !== "shipped" && order_status !== "unshipped") {
+    if (
+      order_status !== "shipped" &&
+      order_status !== "unshipped" &&
+      order_status !== "cancelled"
+    ) {
       errors.push({
         status: "error",
         message:
-          "Invalid order_status property. Possible values are: 'shipped' or 'unshipped'",
+          "Invalid order_status property. Possible values are: 'shipped', 'unshipped', or 'cancelled'",
         code: 400,
       });
     }

@@ -12,7 +12,7 @@ router.get("/:orderId", auths.checkJWT, ordersController.getOrderById);
 
 router.post("/", auths.checkJWT, ordersController.createOrder);
 
-router.patch("/", auths.checkJWT, ordersController.updateOrder);
+router.patch("/:orderId", auths.checkJWT, ordersController.updateOrder);
 
 // Shipments are generated from Orders, so that path also lives here
 router.post(
