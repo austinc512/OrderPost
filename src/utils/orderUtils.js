@@ -1,6 +1,5 @@
 const validateOrderInfo = (order) => {
   let {
-    order_number,
     order_date,
     total_amount,
     order_status,
@@ -22,23 +21,7 @@ const validateOrderInfo = (order) => {
   // I'm not writing the conditional logic to match carrier/service for my MVP
 
   const errors = [];
-  if (typeof order_number !== "string") {
-    errors.push({
-      status: "error",
-      message: "order number must be a string",
-      code: 400,
-    });
-  }
-  if (
-    typeof order_number === "string" &&
-    (order_number.length === 0 || order_number.length > 20)
-  ) {
-    errors.push({
-      status: "error",
-      message: "order number must be between 1 and 15 characters long",
-      code: 400,
-    });
-  }
+
   // effectively this makes orderNumber a required property of the API request
 
   if (order_date) {

@@ -145,7 +145,6 @@ const createOrder = async (req, res) => {
 
   // utils error checks
   const utilsCheck = validateOrderInfo({
-    order_number,
     order_date,
     total_amount,
     order_status,
@@ -164,6 +163,28 @@ const createOrder = async (req, res) => {
 
   if (utilsCheck) {
     errors.push(...utilsCheck);
+  }
+
+  // originally order_number was checked in utils
+  // however this complicates things for updateOrder (which also uses utils)
+  // So I'm just putting it here instead.
+
+  if (typeof order_number !== "string") {
+    errors.push({
+      status: "error",
+      message: "order number must be a string",
+      code: 400,
+    });
+  }
+  if (
+    typeof order_number === "string" &&
+    (order_number.length === 0 || order_number.length > 20)
+  ) {
+    errors.push({
+      status: "error",
+      message: "order number must be between 1 and 15 characters long",
+      code: 400,
+    });
   }
 
   // A note about service_code:
@@ -431,6 +452,33 @@ const updateOrder = async (req, res) => {
     }
   }
 
+  // 3. order_id must correspond to user_id
+  const orderId = +req.params.orderId;
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
   // 2. warehouse_id must correspond to user_id
   if (warehouse_id) {
     const warehouseSql =
@@ -458,22 +506,99 @@ const updateOrder = async (req, res) => {
     }
   }
 
-  // 3. order_id must correspond to user_id
-  const orderId = +req.params.orderId;
-  const verifyOrderSql = `SELECT o.*
-  FROM OrderPost_orders o
-  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
-  WHERE c.user_id = ? AND o.order_id = ?`;
-  let orderResults;
-  try {
-    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
-    if (orderResults.length === 0) {
-      errors.push({
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+  // if here, order data is valid.
+  // order_number is no longer a required property to update order.
+  // so now, I will not allow order_number to be updated.
+
+  // orderId, customer_id are accessible.
+  // these two will never change 'WHERE order_id = ?
+
+  let updateSql = "UPDATE OrderPost_orders SET ";
+  const updateParams = [];
+  const updateColumns = [];
+
+  if (order_date) {
+    updateColumns.push("order_date = ?");
+    updateParams.push(order_date);
+  }
+  if (total_amount) {
+    updateColumns.push("total_amount = ?");
+    updateParams.push(total_amount);
+  }
+  if (order_status) {
+    updateColumns.push("order_status = ?");
+    updateParams.push(order_status);
+  }
+  if (ship_by_date) {
+    updateColumns.push("ship_by_date = ?");
+    updateParams.push(ship_by_date);
+  }
+  if (carrier_code) {
+    updateColumns.push("carrier_code = ?");
+    updateParams.push(carrier_code);
+  }
+  if (service_code) {
+    updateColumns.push("service_code = ?");
+    updateParams.push(service_code);
+  }
+  if (package_code) {
+    updateColumns.push("package_code = ?");
+    updateParams.push(package_code);
+  }
+  if (confirmation) {
+    updateColumns.push("confirmation = ?");
+    updateParams.push(confirmation);
+  }
+  if (order_weight) {
+    updateColumns.push("order_weight = ?");
+    updateParams.push(order_weight);
+  }
+  if (weight_units) {
+    updateColumns.push("weight_units = ?");
+    updateParams.push(weight_units);
+  }
+  if (dimension_x) {
+    updateColumns.push("dimension_x = ?");
+    updateParams.push(dimension_x);
+  }
+  if (dimension_y) {
+    updateColumns.push("dimension_y = ?");
+    updateParams.push(dimension_y);
+  }
+  if (dimension_z) {
+    updateColumns.push("dimension_z = ?");
+    updateParams.push(dimension_z);
+  }
+  if (warehouse_id) {
+    updateColumns.push("warehouse_id = ?");
+    updateParams.push(warehouse_id);
+  }
+
+  updateSql += updateColumns.join(", ");
+  updateSql += " WHERE order_id = ?";
+  updateParams.push(orderId);
+
+  // if updateParams.length === 0 return 'nothing to update'
+  // hopefully I don't regret this later...
+  if (updateParams.length === 0) {
+    return res.status(400).json({
+      errors: {
         status: "error",
-        message: "invalid warehouse_id",
+        message: "request contained no properties to update",
         code: 400,
-      });
-    }
+      },
+    });
+  }
+  // console.log(updateSql);
+  console.log(updateParams);
+
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(updateSql, updateParams);
+    console.log(updatedResults);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
@@ -485,14 +610,21 @@ const updateOrder = async (req, res) => {
     });
   }
 
-  if (errors.length) {
-    return res.status(400).json({ errors });
-  }
-  // if here, order data is valid.
-  // I will not allow updates to order_number
-  //
+  // if here, UPDATE was successful
 
-  res.json(`Coming Soon!`);
+  getOrderById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        orderId: orderId,
+      },
+    },
+    res
+  );
+
+  // res.json(`Coming Soon!`);
 };
 
 // Shipments are generated from Orders, so that function also lives here
