@@ -24,8 +24,20 @@ const validateAddress = async (address) => {
   }
 };
 
+const createLabel = async (shipment) => {
+  try {
+    const response = await instance.post("/v1/labels", shipment);
+    // console.log(response);
+    return response;
+  } catch (error) {
+    console.log("error in address validation:", error.response);
+    return error.response;
+  }
+};
+
 module.exports = {
   validateAddress,
+  createLabel,
 };
 
 /*

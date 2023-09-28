@@ -1,6 +1,7 @@
 const db = require("../sql/db");
 
 const { validateOrderInfo } = require("../utils/orderUtils");
+const { createLabel } = require("../utils/shipEngineAPI");
 
 /*
 
@@ -1190,7 +1191,7 @@ const createShipment = async (req, res) => {
   const shipFromSql = `SELECT * FROM OrderPost_warehouses WHERE warehouse_id = ?`;
   try {
     shipFrom = await db.querySync(shipFromSql, [targetOrder.warehouse_id]);
-    console.log(shipFrom[0]);
+    // console.log(shipFrom[0]);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
@@ -1218,8 +1219,20 @@ const createShipment = async (req, res) => {
   shipmentObject.shipment.service_code = targetOrder.service_code;
   shipmentObject.shipment.ship_to = shipToAddress;
   shipmentObject.shipment.ship_from = shipFromAddress;
+  shipmentObject.shipment.packages.push({
+    weight: {
+      value: 20,
+      unit: "ounce",
+    },
+    dimensions: {
+      height: 6,
+      width: 12,
+      length: 24,
+      unit: "inch",
+    },
+  });
 
-  console.log(shipmentObject);
+  // console.log(shipmentObject);
 
   // ShipEngine CreateLabel
 
@@ -1227,8 +1240,29 @@ const createShipment = async (req, res) => {
 
   // update order to "shipped" status.
 
+  /*
+  
+  [
+    {
+      weight: {
+        value: 20,
+        unit: ounce
+      },
+      dimensions: {
+        height: 6,
+        width: 12,
+        length: 24,
+        unit: inch
+      }
+    }
+  ]
+  
+  */
+  const response = await createLabel(shipmentObject);
+  console.log(response.data);
+
   // respond with the label href (I think that's the best approach)
-  res.json(shipmentObject);
+  res.json(response.data);
 };
 
 module.exports = {
