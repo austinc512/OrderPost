@@ -42,7 +42,7 @@ router.delete(
 
 // Shipments are generated from Orders, so that path also lives here
 router.post(
-  "/:orderId/createshipment",
+  "/:orderId/create-shipment",
   auths.checkJWT,
   ordersController.createShipment
 );

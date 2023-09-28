@@ -1090,9 +1090,73 @@ const deleteOrderItem = async (req, res) => {
 
 // Shipments are generated from Orders, so that function also lives here
 
-const createShipment = (req, res) => {
-  // creating scaffolding
-  // will implement later
+const createShipment = async (req, res) => {
+  // this endpoint takes in an orderId
+  const userId = req.userInfo.userId;
+  const orderId = +req.params.orderId;
+  const errors = [];
+  // validate that order corresponds to user
+  // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
+  const verifyOrderSql = `SELECT o.*
+  FROM OrderPost_orders o
+  JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  WHERE c.user_id = ? AND o.order_id = ?`;
+  let orderResults;
+  try {
+    orderResults = await db.querySync(verifyOrderSql, [userId, orderId]);
+    if (orderResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid order_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  const targetOrder = orderResults[0];
+  // vaidate that all the necessary props to make a label request exist
+  if (!targetOrder.service_code) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Order is missing service_code",
+        code: 400,
+      },
+    });
+  }
+
+  // can assign properties to shipmentObject
+  // console.log(orderResults[0]);
+  // console.log(orderResults[0].order_status);
+
+  // create shipmentObject
+  const shipmentObject = {
+    shipment: {
+      service_code: null,
+      ship_to: null,
+      ship_from: null,
+      packages: [],
+    },
+  };
+  // hydrate shipmentObject with data
+  shipmentObject.shipment.service_code = targetOrder.service_code;
+  console.log(shipmentObject);
+
+  // ShipEngine CreateLabel
+
+  // If successful, create shipment record
+
+  // update order to "shipped" status.
+
+  // respond with the label href (I think that's the best approach)
   res.json(`Coming Soon!`);
 };
 
