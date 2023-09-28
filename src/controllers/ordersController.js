@@ -1137,6 +1137,18 @@ const createShipment = async (req, res) => {
         message: "invalid order_id",
         code: 400,
       });
+    } else if (orderResults[0].order_status === "shipped") {
+      // if the order is already shipped, do not allow for another label to be created.
+      return res.status(400).json({
+        errors: [
+          {
+            status: "error",
+            message:
+              "Order is already in the 'shipped' status. Void the label to restore order to 'unshipped' status.",
+            code: 500,
+          },
+        ],
+      });
     }
   } catch (err) {
     console.log(err);
@@ -1145,7 +1157,7 @@ const createShipment = async (req, res) => {
         {
           status: "error",
           message: "Internal Server Error",
-          code: 500,
+          code: 400,
         },
       ],
     });
@@ -1223,7 +1235,6 @@ const createShipment = async (req, res) => {
   const shipFromSql = `SELECT * FROM OrderPost_warehouses WHERE warehouse_id = ?`;
   try {
     shipFrom = await db.querySync(shipFromSql, [targetOrder.warehouse_id]);
-    // console.log(shipFrom[0]);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
@@ -1272,17 +1283,71 @@ const createShipment = async (req, res) => {
     return res.status(500).json(...response.errors);
   }
   // if here, we have a label response
-  console.log(response.data);
-  console.log(response.data.label_download.pdf);
+  console.log(targetOrder);
+  // update order to "shipped" status.
+  const updateOrderSql = `UPDATE OrderPost_orders SET order_status = 'shipped' WHERE order_id = ?`;
+  let updateSuccessful;
+  try {
+    updateSuccessful = await db.querySync(updateOrderSql, [
+      targetOrder.order_id,
+    ]);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
+    });
+  }
 
   // upon success, create shipment record
-  // update order to "shipped" status.
-  // respond with the label href (I think that's the best approach)
+  const createShipmentSql = `INSERT INTO OrderPost_shipments
+  (order_id, order_number, order_date, total_amount, ship_by_date, carrier_code, service_code, package_code, confirmation, order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units, label_reference)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const createShipmentParams = [
+    targetOrder.order_id,
+    targetOrder.order_number,
+    targetOrder.order_date,
+    targetOrder.total_amount,
+    targetOrder.ship_by_date,
+    targetOrder.carrier_code,
+    targetOrder.service_code,
+    targetOrder.package_code,
+    targetOrder.confirmation,
+    targetOrder.order_weight,
+    targetOrder.weight_units,
+    targetOrder.dimension_x,
+    targetOrder.dimension_y,
+    targetOrder.dimension_z,
+    targetOrder.dimension_units,
+    response.data.label_download.pdf,
+  ];
 
+  let createShipment;
+  try {
+    createShipment = await db.querySync(
+      createShipmentSql,
+      createShipmentParams
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
+    });
+  }
+
+  // respond with the label href (I think that's the best approach)
   res.json({ label_download: response.data.label_download.pdf });
-
-  // respond with the label href (I think that's the best approach)
-  // if error, the ShipEngine error is passed to the client
 };
 
 module.exports = {
