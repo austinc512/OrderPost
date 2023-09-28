@@ -1219,18 +1219,28 @@ const createShipment = async (req, res) => {
   shipmentObject.shipment.service_code = targetOrder.service_code;
   shipmentObject.shipment.ship_to = shipToAddress;
   shipmentObject.shipment.ship_from = shipFromAddress;
+  // need do for real tho
   shipmentObject.shipment.packages.push({
     weight: {
-      value: 20,
-      unit: "ounce",
+      value: targetOrder.order_weight,
+      unit: targetOrder.weight_units,
     },
     dimensions: {
-      height: 6,
-      width: 12,
-      length: 24,
-      unit: "inch",
+      height: targetOrder.dimension_x,
+      width: targetOrder.dimension_y,
+      length: targetOrder.dimension_z,
+      unit: targetOrder.dimension_units,
     },
   });
+
+  // need order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units
+
+  // console.log(targetOrder.order_weight);
+  // console.log(targetOrder.weight_units);
+  // console.log(targetOrder.dimension_x);
+  // console.log(targetOrder.dimension_y);
+  // console.log(targetOrder.dimension_z);
+  // console.log(targetOrder.dimension_units, typeof targetOrder.dimension_units);
 
   // console.log(shipmentObject);
 
@@ -1259,7 +1269,7 @@ const createShipment = async (req, res) => {
   
   */
   const response = await createLabel(shipmentObject);
-  console.log(response.data);
+  // console.log(response.data);
 
   // respond with the label href (I think that's the best approach)
   res.json(response.data);
