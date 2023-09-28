@@ -360,11 +360,13 @@ const createOrder = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
   // if here, INSERT was successful
@@ -483,11 +485,13 @@ const updateOrder = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -614,11 +618,13 @@ const updateOrder = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -674,11 +680,13 @@ const getOrderItems = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -759,11 +767,13 @@ const addOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -779,11 +789,13 @@ const addOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
   if (productResults.length === 0) {
@@ -805,11 +817,13 @@ const addOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal server error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -879,11 +893,13 @@ const updateOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -899,11 +915,13 @@ const updateOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
   if (productResults.length === 0) {
@@ -935,11 +953,13 @@ const updateOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal server error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -1010,11 +1030,13 @@ const deleteOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -1030,11 +1052,13 @@ const deleteOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
   if (productResults.length === 0) {
@@ -1066,11 +1090,13 @@ const deleteOrderItem = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -1115,11 +1141,13 @@ const createShipment = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
   const targetOrder = orderResults[0];
@@ -1134,16 +1162,19 @@ const createShipment = async (req, res) => {
     });
   }
 
-  // can assign properties to shipmentObject
-  // console.log(orderResults[0]);
-  // console.log(orderResults[0].order_status);
-
   /*
-  when creating customerAddress, I have these requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code
+  Creating customerAddress requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code
+  
+  Warehouses also has these requirements.
+
+  Can count on this data being passed to ShipEngine.
+
+  Currently I'm only allowing create/read/delete and not update for both customerAddress and Warehouse. The logic also looks for truthy values in order to write to DB for any of the properties.
+
+  If I write logic to update either of these objects, then I probably will need to do some extra validation of customerAddress/Warehouse in this controller function.
   */
 
   // get customer address
-
   const shipToSql = `SELECT * FROM OrderPost_ship_to WHERE customer_id = ?`;
   const shipToParams = [targetOrder.customer_id];
   let shipTo;
@@ -1162,11 +1193,13 @@ const createShipment = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -1175,8 +1208,7 @@ const createShipment = async (req, res) => {
   const shipToAddress = shipTo[0];
   shipToAddress.name = `${shipToAddress.first_name.trim()} ${shipToAddress.last_name.trim()}`;
 
-  // get shipFrom info
-
+  // get Warehouse info
   if (!targetOrder.warehouse_id) {
     return res.status(400).json({
       errors: {
@@ -1195,11 +1227,13 @@ const createShipment = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      errors: {
-        status: "error",
-        message: "Internal Server Error",
-        code: 500,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
     });
   }
 
@@ -1219,7 +1253,7 @@ const createShipment = async (req, res) => {
   shipmentObject.shipment.service_code = targetOrder.service_code;
   shipmentObject.shipment.ship_to = shipToAddress;
   shipmentObject.shipment.ship_from = shipFromAddress;
-  // need do for real tho
+
   shipmentObject.shipment.packages.push({
     weight: {
       value: targetOrder.order_weight,
@@ -1233,46 +1267,22 @@ const createShipment = async (req, res) => {
     },
   });
 
-  // need order_weight, weight_units, dimension_x, dimension_y, dimension_z, dimension_units
-
-  // console.log(targetOrder.order_weight);
-  // console.log(targetOrder.weight_units);
-  // console.log(targetOrder.dimension_x);
-  // console.log(targetOrder.dimension_y);
-  // console.log(targetOrder.dimension_z);
-  // console.log(targetOrder.dimension_units, typeof targetOrder.dimension_units);
-
-  // console.log(shipmentObject);
-
-  // ShipEngine CreateLabel
-
-  // If successful, create shipment record
-
-  // update order to "shipped" status.
-
-  /*
-  
-  [
-    {
-      weight: {
-        value: 20,
-        unit: ounce
-      },
-      dimensions: {
-        height: 6,
-        width: 12,
-        length: 24,
-        unit: inch
-      }
-    }
-  ]
-  
-  */
   const response = await createLabel(shipmentObject);
-  // console.log(response.data);
+  if (response.errors) {
+    return res.status(500).json(...response.errors);
+  }
+  // if here, we have a label response
+  console.log(response.data);
+  console.log(response.data.label_download.pdf);
+
+  // upon success, create shipment record
+  // update order to "shipped" status.
+  // respond with the label href (I think that's the best approach)
+
+  res.json({ label_download: response.data.label_download.pdf });
 
   // respond with the label href (I think that's the best approach)
-  res.json(response.data);
+  // if error, the ShipEngine error is passed to the client
 };
 
 module.exports = {

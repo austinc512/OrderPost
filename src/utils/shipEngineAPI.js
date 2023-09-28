@@ -20,6 +20,7 @@ const validateAddress = async (address) => {
     return response;
   } catch (error) {
     console.log("error in address validation:", error.response);
+    console.log(error.response.data);
     return error.response;
   }
 };
@@ -30,8 +31,14 @@ const createLabel = async (shipment) => {
     // console.log(response);
     return response;
   } catch (error) {
-    console.log("error in address validation:", error.response);
-    return error.response;
+    console.log(`error in createLabel:`);
+    console.log(error.response);
+    console.log(`Isolating ShipEngine errors:`);
+    console.log(error.response.data);
+    // throw new Error(error.response.data);
+    return {
+      errors: [error.response.data],
+    };
   }
 };
 
