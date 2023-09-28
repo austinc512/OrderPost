@@ -1137,6 +1137,74 @@ const createShipment = async (req, res) => {
   // console.log(orderResults[0]);
   // console.log(orderResults[0].order_status);
 
+  /*
+  when creating customerAddress, I have these requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code
+  */
+
+  // get customer address
+
+  const shipToSql = `SELECT * FROM OrderPost_ship_to WHERE customer_id = ?`;
+  const shipToParams = [targetOrder.customer_id];
+  let shipTo;
+
+  try {
+    shipTo = await db.querySync(shipToSql, shipToParams);
+    if (shipTo.length === 0) {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "No addresses have been created for this customer",
+          code: 400,
+        },
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  // NOTE: ONLY DOING 1 ADDRESS PER CUSTOMER RIGHT NOW
+  // CAN CHANGE THIS LATER
+  const shipToAddress = shipTo[0];
+  shipToAddress.name = `${shipToAddress.first_name.trim()} ${shipToAddress.last_name.trim()}`;
+
+  // get shipFrom info
+
+  if (!targetOrder.warehouse_id) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "No warehouse_id associated with this order",
+        code: 400,
+      },
+    });
+  }
+
+  let shipFrom;
+  const shipFromSql = `SELECT * FROM OrderPost_warehouses WHERE warehouse_id = ?`;
+  try {
+    shipFrom = await db.querySync(shipFromSql, [targetOrder.warehouse_id]);
+    console.log(shipFrom[0]);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  const shipFromAddress = shipFrom[0];
+  shipFromAddress.name = `${shipFromAddress.first_name.trim()} ${shipFromAddress.last_name.trim()}`;
+
   // create shipmentObject
   const shipmentObject = {
     shipment: {
@@ -1148,6 +1216,9 @@ const createShipment = async (req, res) => {
   };
   // hydrate shipmentObject with data
   shipmentObject.shipment.service_code = targetOrder.service_code;
+  shipmentObject.shipment.ship_to = shipToAddress;
+  shipmentObject.shipment.ship_from = shipFromAddress;
+
   console.log(shipmentObject);
 
   // ShipEngine CreateLabel
@@ -1157,7 +1228,7 @@ const createShipment = async (req, res) => {
   // update order to "shipped" status.
 
   // respond with the label href (I think that's the best approach)
-  res.json(`Coming Soon!`);
+  res.json(shipmentObject);
 };
 
 module.exports = {
