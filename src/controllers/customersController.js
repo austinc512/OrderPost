@@ -374,6 +374,21 @@ const deleteCustomer = (req, res) => {
 
 // ship-to address functions
 
+/*
+
+A QUICK NOTE:
+customer addresses is still designed to create more than
+one address per customer
+
+but other logic for creating a shipment will only grab the first
+address from the customer.
+
+This is to save time during the MVP process, but should be 
+re-written later to either definitively support or NOT 
+support multiple-address functionality
+
+*/
+
 const getCustomerAddresses = (req, res) => {
   // GET /customers/:customerId/addresses
   const customerId = +req.params.customerId;
