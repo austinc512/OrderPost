@@ -315,24 +315,32 @@ const updateProduct = async (req, res) => {
   const checkNaN = isNaN(price);
   const correctPriceFormat = +price.toFixed(2) === price;
   // I should allow $0 and discounts/coupons (negative values)
-  if (typeof price == "number" && !checkNaN && correctPriceFormat) {
+  if (
+    (typeof price == "number" && !checkNaN && correctPriceFormat) ||
+    price === 0
+  ) {
     sql += "price = ?, ";
     params.push(price);
   }
-  if (!correctPriceFormat) {
-    errors.push({
-      status: "error",
-      message: "price is not formatted correctly",
-      code: 400,
-    });
+  // making an update here
+  // if price isn't included, !correctPriceFormat and checkNaN are throwing errors
+  if (price) {
+    if (!correctPriceFormat) {
+      errors.push({
+        status: "error",
+        message: "price is not formatted correctly",
+        code: 400,
+      });
+    }
+    if (checkNaN) {
+      errors.push({
+        status: "error",
+        message: "price is not a number",
+        code: 400,
+      });
+    }
   }
-  if (checkNaN) {
-    errors.push({
-      status: "error",
-      message: "price is not a number",
-      code: 400,
-    });
-  }
+
   if (typeof description !== "string") {
     errors.push({
       status: "error",
