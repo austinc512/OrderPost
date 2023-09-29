@@ -71,7 +71,7 @@ app.use("/shipments", shipmentRoutes);
 
 // testing
 app.use("/", (req, res) => {
-  res.json({ message: "welcome to my server!" });
+  res.json({ message: "welcome to my server! Running test." });
 });
 
 app.listen(port, () => {
