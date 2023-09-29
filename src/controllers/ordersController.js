@@ -92,11 +92,13 @@ const listOrders = (req, res) => {
         console.log(`an error occurred:`);
         console.log(err);
         res.status(500).json({
-          errors: {
-            status: "error",
-            message: "internal server error",
-            code: 500,
-          },
+          errors: [
+            {
+              status: "error",
+              message: "internal server error",
+              code: 500,
+            },
+          ],
         });
       } else {
         res.json({ data: dbResponse });
@@ -118,14 +120,16 @@ const getOrderById = (req, res) => {
       console.log(`an error occurred:`);
       console.log(err);
       res.status(500).json({
-        errors: {
-          status: "error",
-          message: "internal server error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "internal server error",
+            code: 500,
+          },
+        ],
       });
     } else {
-      res.json({ data: dbResponse[0] });
+      res.json(dbResponse[0]);
     }
   });
 };
@@ -225,11 +229,13 @@ const createOrder = async (req, res) => {
     } catch (err) {
       console.log(err);
       return res.status(500).json({
-        errors: {
-          status: "error",
-          message: "Internal Server Error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "Internal Server Error",
+            code: 500,
+          },
+        ],
       });
     }
   }
@@ -252,11 +258,13 @@ const createOrder = async (req, res) => {
     } catch (err) {
       console.log(err);
       return res.status(500).json({
-        errors: {
-          status: "error",
-          message: "Internal Server Error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "Internal Server Error",
+            code: 500,
+          },
+        ],
       });
     }
   }
@@ -456,11 +464,13 @@ const updateOrder = async (req, res) => {
     } catch (err) {
       console.log(err);
       return res.status(500).json({
-        errors: {
-          status: "error",
-          message: "Internal Server Error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "Internal Server Error",
+            code: 500,
+          },
+        ],
       });
     }
   }
@@ -513,11 +523,13 @@ const updateOrder = async (req, res) => {
     } catch (err) {
       console.log(err);
       return res.status(500).json({
-        errors: {
-          status: "error",
-          message: "Internal Server Error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "Internal Server Error",
+            code: 500,
+          },
+        ],
       });
     }
   }
@@ -601,11 +613,13 @@ const updateOrder = async (req, res) => {
   // hopefully I don't regret this later...
   if (updateParams.length === 0) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "request contained no properties to update",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "request contained no properties to update",
+          code: 400,
+        },
+      ],
     });
   }
   // console.log(updateSql);
@@ -704,11 +718,13 @@ const getOrderItems = async (req, res) => {
       console.log(`an error occurred:`);
       console.log(err);
       res.status(500).json({
-        errors: {
-          status: "error",
-          message: "internal server error",
-          code: 500,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "internal server error",
+            code: 500,
+          },
+        ],
       });
     } else {
       res.json({ data: dbResponse });
@@ -800,11 +816,13 @@ const addOrderItem = async (req, res) => {
   }
   if (productResults.length === 0) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "There are no products with this product_id",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "There are no products with this product_id",
+          code: 400,
+        },
+      ],
     });
   }
   // if here, product_id is valid and order corresponds to user
@@ -926,11 +944,13 @@ const updateOrderItem = async (req, res) => {
   }
   if (productResults.length === 0) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "There are no products with this product_id",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "There are no products with this product_id",
+          code: 400,
+        },
+      ],
     });
   }
   // if here, product_id is valid and order corresponds to user
@@ -943,11 +963,13 @@ const updateOrderItem = async (req, res) => {
     console.log(updatedResults.affectedRows);
     if (updatedResults.affectedRows === 0) {
       return res.status(400).json({
-        errors: {
-          status: "error",
-          message: "productId does not exist on order",
-          code: 400,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "productId does not exist on order",
+            code: 400,
+          },
+        ],
       });
     }
   } catch (err) {
@@ -1006,11 +1028,6 @@ const deleteOrderItem = async (req, res) => {
     });
   }
 
-  // if errors, return
-  if (errors.length) {
-    return res.status(400).json({ errors });
-  }
-
   // 3. order_id must correspond to user_id
   // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
   const verifyOrderSql = `SELECT o.*
@@ -1040,6 +1057,11 @@ const deleteOrderItem = async (req, res) => {
     });
   }
 
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
   // if here, order corresponds to user.
 
   // product must correspond to userId
@@ -1063,11 +1085,13 @@ const deleteOrderItem = async (req, res) => {
   }
   if (productResults.length === 0) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "There are no products with this product_id",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "There are no products with this product_id",
+          code: 400,
+        },
+      ],
     });
   }
   // if here, product_id is valid and order corresponds to user
@@ -1080,11 +1104,13 @@ const deleteOrderItem = async (req, res) => {
     updatedResults = await db.querySync(deleteSql, deleteParams);
     if (updatedResults.affectedRows === 0) {
       return res.status(400).json({
-        errors: {
-          status: "error",
-          message: "productId does not exist on order",
-          code: 400,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "productId does not exist on order",
+            code: 400,
+          },
+        ],
       });
     }
   } catch (err) {
@@ -1166,11 +1192,13 @@ const createShipment = async (req, res) => {
   // vaidate that all the necessary props to make a label request exist
   if (!targetOrder.service_code) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "Order is missing service_code",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "Order is missing service_code",
+          code: 400,
+        },
+      ],
     });
   }
 
@@ -1195,11 +1223,13 @@ const createShipment = async (req, res) => {
     shipTo = await db.querySync(shipToSql, shipToParams);
     if (shipTo.length === 0) {
       return res.status(400).json({
-        errors: {
-          status: "error",
-          message: "No addresses have been created for this customer",
-          code: 400,
-        },
+        errors: [
+          {
+            status: "error",
+            message: "No addresses have been created for this customer",
+            code: 400,
+          },
+        ],
       });
     }
   } catch (err) {
@@ -1223,11 +1253,13 @@ const createShipment = async (req, res) => {
   // get Warehouse info
   if (!targetOrder.warehouse_id) {
     return res.status(400).json({
-      errors: {
-        status: "error",
-        message: "No warehouse_id associated with this order",
-        code: 400,
-      },
+      errors: [
+        {
+          status: "error",
+          message: "No warehouse_id associated with this order",
+          code: 400,
+        },
+      ],
     });
   }
 

@@ -8,12 +8,16 @@ const auths = require("../middleware/auth");
 
 router.get("/", auths.checkJWT, shipmentsController.listShipments);
 
-router.get("/:shipmentId", auths.checkJWT, shipmentsController.listShipments);
+router.get(
+  "/:orderId",
+  auths.checkJWT,
+  shipmentsController.getShipmentByOrderId
+);
 
 router.delete(
-  "/:shipmentId",
+  "/:orderId",
   auths.checkJWT,
-  shipmentsController.deleteShipment
+  shipmentsController.deleteShipmentByOrderId
 );
 
 module.exports = router;

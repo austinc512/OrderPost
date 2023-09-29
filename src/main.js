@@ -66,6 +66,9 @@ app.use("/warehouses", warehouseRoutes);
 const orderRoutes = require("./routes/ordersRoutes");
 app.use("/orders", orderRoutes);
 
+const shipmentRoutes = require("./routes/shipmentsRoutes");
+app.use("/shipments", shipmentRoutes);
+
 app.listen(port, () => {
   console.log(`Web server is listening on port ${port}!`);
 });
