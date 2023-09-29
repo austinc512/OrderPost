@@ -16,7 +16,7 @@ let checkJWT = (req, res, next) => {
     // you done messed up
     // console.log(`Missing signed token`);
     // console.log(`token: ${signedToken}`);
-    res.sendStatus(401);
+    res.status(401).json({ error: "missing authorization" });
     return;
   }
 
@@ -29,7 +29,7 @@ let checkJWT = (req, res, next) => {
     req.userInfo = unsigned;
   } catch (err) {
     console.log("failed to verify the token, ", err);
-    res.sendStatus(403);
+    res.status(403).json({ error: "unauthorized" });
     return;
   }
   // if we're here, it's a valid token, so we go to the next task in the chain
