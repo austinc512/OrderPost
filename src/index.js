@@ -69,6 +69,11 @@ app.use("/orders", orderRoutes);
 const shipmentRoutes = require("./routes/shipmentsRoutes");
 app.use("/shipments", shipmentRoutes);
 
+// testing
+app.use("/", (req, res) => {
+  res.json({ message: "welcome to my server!" });
+});
+
 app.listen(port, () => {
   console.log(`Web server is listening on port ${port}!`);
 });
