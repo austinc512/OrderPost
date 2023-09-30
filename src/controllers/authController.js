@@ -68,9 +68,10 @@ const login = async (req, res) => {
     "select user_id, first_name, last_name, password_hash from OrderPost_users where username = ?";
   let params = [username];
 
+  // could clean this up into a querySync later
+  // I'm kinda doing a callback hell here.
+
   db.query(sql, params, async (err, rows) => {
-    // could clean this up into a querySync later
-    // I'm kinda doing a callback hell here.
     if (err) {
       console.log("Could not find username, ", err);
       res.sendStatus(500);
