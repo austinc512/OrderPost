@@ -3,10 +3,7 @@ const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-// JWT_SECRET is available
-
 /*
-
 get the username, password, full_name from request body
 hash the password first
 then insert the new record into DB
@@ -58,76 +55,22 @@ let registerUser = async (req, res) => {
 };
 
 /*
-// basic wrapper prmoise if you just want to convert a callback into a promise
-// We'll use this when we do our authorization
-connection.queryPromise = (sql, params) => {
-  return new Promise((resolve, reject) => {
-    connection.query(sql, params, (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-};
-
-// go farther, and if you want to process the results of your promise and return the results
-// you want to make a blocking function that always returns err and rows
-connection.querySync = async (sql, params) => {
-  let promise = new Promise((resolve, reject) => {
-    console.log(`executing query, ${sql}`);
-    connection.query(sql, params, (err, results) => {
-      if (err) {
-        console.log(`rejecting`);
-        return reject(err);
-      } else {
-        console.log(`resolving`);
-        return resolve(results);
-      }
-    });
-  });
-  let results = await promise
-    .then((results) => {
-      console.log(`results, ${results}`);
-      return results;
-    })
-    .catch((err) => {
-      throw err;
-    });
-  return results;
-};
-*/
-
-/*
-
-now we have a registered user, and now they want to log in
-if good, here's your token, if not, I've got nothing for ya
-take the username and pw from the login form (req)
-find the user in the DB, and
-we hash the pw and compare to pw in DB
-if hashes match, it's a good pw
-so create token for this user
-sign the token - we're gonna add salt (secret)
-
-*/
-
-/*
-
 {
     "username": "string",
     "password": "string"
 }
-
 */
 
-let login = (req, res) => {
-  const { username, password } = req.body;
+const login = async (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
   let sql =
     "select user_id, first_name, last_name, password_hash from OrderPost_users where username = ?";
   let params = [username];
 
   db.query(sql, params, async (err, rows) => {
+    // could clean this up into a querySync later
+    // I'm kinda doing a callback hell here.
     if (err) {
       console.log("Could not find username, ", err);
       res.sendStatus(500);

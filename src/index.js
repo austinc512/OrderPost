@@ -8,65 +8,69 @@ const app = express();
 // const port = process.env.EXPRESS_PORT;
 const port = process.env.EXP_PORT || 5001;
 
+const productRoutes = require("./routes/productRoutes");
+const customerRoutes = require("./routes/customerRoutes");
+const authRoutes = require("./routes/authRoutes");
+const warehouseRoutes = require("./routes/warehouseRoutes");
+const orderRoutes = require("./routes/ordersRoutes");
+const shipmentRoutes = require("./routes/shipmentsRoutes");
+
+// need to add cors for cross origin
+const cors = require("cors");
+
+// const setHeader = (req, res, next) => {
+//   // Website we wish to allow content
+//   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+
+//   // Request methods you wish to allow
+//   res.setHeader("Access-Control-Allow-Methods", "GET");
+
+//   //type of content we wish to allow
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "X-Requested-With,content-type"
+//   );
+
+//   // set to true if you need the website to include cookies in the request sent to the API (in case you use sessions)
+//   res.setHeader("Access-Control-Allow-Credentials", true);
+
+//   next();
+// };
+
+app.use(cors());
+
 app.use(express.json());
 
-/*
-Structure:
+app.use(function (req, res, next) {
+  // Website we wish to allow content
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
 
-in main.js:
-let yourRoute - require("./routes/yourRoute");
-app.use("/", yourRoute);
+  // Request methods you wish to allow
+  res.setHeader("Access-Control-Allow-Methods", [
+    "GET",
+    "PATCH",
+    "POST",
+    "DELETE",
+  ]);
 
-Inside of routes file:
-const express = require("express");
+  //type of content we wish to allow
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-Requested-With,content-type"
+  );
 
-const authControllers = require("../controllers/authController");
+  // set to true if you need the website to include cookies in the request sent to the API (in case you use sessions)
+  res.setHeader("Access-Control-Allow-Credentials", true);
 
-const auths = require("../middleware/auth");
+  next();
+});
 
-const router = express.Router();
-
-router.post("/register", authControllers.registerUser);
-
-module.exports = router;
-
-Notes for implementing auth:
-
-After implementing authentication, this changes the structure of the router.get method call in the Routes file
-
-IMPORTANT IMPORTANT IMPORTANT IMPORTANT
-router.get("/privateHello", auths.checkJWT, messageControllers.privateHello);
-
-inside of checkJWT function in auths middleware file, you need the next() function at the end
-let checkJWT = (req, res, next) => {
-    // logic here
-      next();
-};
-module.exports = { checkJWT };
-
-That adds authentication to these router.get calls
-for now, only implementing routes, no auth. just know for later
-
-*/
-
-// already on the products endpoint
-const productRoutes = require("./routes/productRoutes");
+// define the endpoint as the first argument to app.use
 app.use("/products", productRoutes);
-
-// use customers endpoint
-const customerRoutes = require("./routes/customerRoutes");
 app.use("/customers", customerRoutes);
-
-const authRoutes = require("./routes/authRoutes");
 app.use("/auth", authRoutes);
-
-const warehouseRoutes = require("./routes/warehouseRoutes");
 app.use("/warehouses", warehouseRoutes);
-
-const orderRoutes = require("./routes/ordersRoutes");
 app.use("/orders", orderRoutes);
-
-const shipmentRoutes = require("./routes/shipmentsRoutes");
 app.use("/shipments", shipmentRoutes);
 
 // testing
