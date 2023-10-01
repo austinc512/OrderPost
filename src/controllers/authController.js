@@ -84,7 +84,7 @@ const login = async (req, res) => {
       } else if (rows.length == 0) {
         console.log(`not a valid username, ${username}`);
         // could just be username that's incorrect
-        res.sendStatus(400).json({ error: `invalid username` });
+        res.status(400).json({ error: `invalid username` });
       } else {
         // we have 1 good row
         // it comes back as an arr of an object, so we need rows[0]
