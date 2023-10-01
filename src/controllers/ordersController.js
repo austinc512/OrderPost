@@ -78,9 +78,10 @@ const listOrders = (req, res) => {
   }
   // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
   // ACTUALLY THIS ONE IS A BIT DIFFERENT
-  const validationSql = `SELECT c.first_name, c.last_name, o.*
+  const validationSql = `SELECT c.first_name, c.last_name, c.phone, c.email, s.address_line1, s.city_locality, s.state_province, s.postal_code, o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id
+  JOIN OrderPost_ship_to s ON c.customer_id = s.customer_id
   WHERE c.user_id = ? AND o.order_status = ?
   LIMIT ? OFFSET ?`;
 
