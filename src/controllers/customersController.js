@@ -387,6 +387,10 @@ This is to save time during the MVP process, but should be
 re-written later to either definitively support or NOT 
 support multiple-address functionality
 
+I think it will NOT support multiple addresses.
+
+Makes an issue occur in listOrders.
+
 */
 
 const getCustomerAddresses = (req, res) => {
