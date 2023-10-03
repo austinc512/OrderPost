@@ -78,6 +78,7 @@ const listOrders = (req, res) => {
   }
   // THIS NEEDS TO BE REFACTORED INTO A UTILITY FUNCTION
   // ACTUALLY THIS ONE IS A BIT DIFFERENT
+  // ACTUALLY THIS ONE IS COMPLETELY DIFFERENT NOW, NEVERMIND
   const validationSql = `SELECT c.first_name, c.last_name, c.phone, c.email, s.address_line1, s.city_locality, s.state_province, s.postal_code, o.*
   FROM OrderPost_orders o
   JOIN OrderPost_customers c ON o.customer_id = c.customer_id

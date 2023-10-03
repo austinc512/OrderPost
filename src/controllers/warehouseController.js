@@ -87,6 +87,7 @@ const verifyWarehouse = async (req, res) => {
     res.json(response.data[0]);
     // ^^ accessing the 0th index because my endpoint only accepts 1 address object
   } else {
+    console.log(response.data);
     res
       .status(500)
       .json({ error: "Address Validation Failed", details: response.data });
@@ -232,6 +233,9 @@ const createWarehouse = async (req, res) => {
   ) {
     columns.push("address_residential_indicator");
     values.push(address_residential_indicator);
+  } else {
+    columns.push("address_residential_indicator");
+    values.push("unknown");
   }
   const valuesLength = new Array(values.length).fill("?");
   let sql = `${starterChunk} (${columns.join(

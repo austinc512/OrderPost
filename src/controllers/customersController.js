@@ -570,6 +570,9 @@ const createCustomerAddress = async (req, res) => {
   ) {
     columns.push("address_residential_indicator");
     values.push(address_residential_indicator);
+  } else {
+    columns.push("address_residential_indicator");
+    values.push("unknown");
   }
   const valuesLength = new Array(values.length).fill("?");
   let sql = `${starterChunk} (${columns.join(
