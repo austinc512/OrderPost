@@ -1165,19 +1165,21 @@ const createShipment = async (req, res) => {
         message: "invalid order_id",
         code: 400,
       });
-    } else if (orderResults[0].order_status === "shipped") {
-      // if the order is already shipped, do not allow for another label to be created.
-      return res.status(400).json({
-        errors: [
-          {
-            status: "error",
-            message:
-              "Order is already in the 'shipped' status. Void the label to restore order to 'unshipped' status.",
-            code: 500,
-          },
-        ],
-      });
     }
+
+    // else if (orderResults[0].order_status === "shipped") {
+    //   // if the order is already shipped, do not allow for another label to be created.
+    //   return res.status(400).json({
+    //     errors: [
+    //       {
+    //         status: "error",
+    //         message:
+    //           "Order is already in the 'shipped' status. Void the label to restore order to 'unshipped' status.",
+    //         code: 400,
+    //       },
+    //     ],
+    //   });
+    // }
   } catch (err) {
     console.log(err);
     return res.status(500).json({
