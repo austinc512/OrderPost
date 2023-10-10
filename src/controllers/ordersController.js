@@ -1187,7 +1187,7 @@ const createShipment = async (req, res) => {
         {
           status: "error",
           message: "Internal Server Error",
-          code: 400,
+          code: 500,
         },
       ],
     });
