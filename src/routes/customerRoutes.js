@@ -55,11 +55,11 @@ router.get(
   customersControllers.getAddressById
 );
 
-// router.patch(
-//   "/:customerId/addresses/:addressId",
-//   auths.checkJWT,
-//   customersControllers.updateAddressById
-// );
+router.patch(
+  "/:customerId/addresses/:addressId",
+  auths.checkJWT,
+  customersControllers.updateAddressById
+);
 
 router.delete(
   "/:customerId/addresses/:addressId",

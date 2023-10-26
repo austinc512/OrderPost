@@ -677,6 +677,180 @@ const getAddressById = async (req, res) => {
   });
 };
 
+const updateAddressById = async (req, res) => {
+  const customerId = +req.params.customerId;
+  const addressId = +req.params.addressId;
+  const userId = req.userInfo.userId;
+
+  // validate that the customer_id and ship_to_id belong to the user_id
+  const validationSql = `SELECT OrderPost_ship_to.* FROM OrderPost_ship_to
+  JOIN OrderPost_customers
+  ON OrderPost_customers.customer_id = OrderPost_ship_to.customer_id
+  WHERE OrderPost_customers.customer_id = ? AND user_id = ? AND ship_to_id = ?;`;
+  let vaildationResult;
+  try {
+    vaildationResult = await db.querySync(validationSql, [
+      customerId,
+      userId,
+      addressId,
+    ]);
+  } catch (err) {
+    console.log(`SELECT * FROM OrderPost_customers failed:`);
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+  if (vaildationResult.length === 0) {
+    return res.status(400).json({
+      errors: {
+        status: "error",
+        message: "Not a valid ship_to_id",
+        code: 400,
+      },
+    });
+  }
+
+  // if it's a valid customer_id, validate API request data
+  const errors = [];
+  const {
+    first_name,
+    last_name,
+    phone,
+    email,
+    company_name,
+    address_line1,
+    address_line2,
+    address_line3,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+    address_residential_indicator,
+  } = req.body;
+  if (
+    !first_name ||
+    !last_name ||
+    !phone ||
+    !address_line1 ||
+    !city_locality ||
+    !state_province ||
+    !postal_code ||
+    !country_code
+  ) {
+    errors.push({
+      status: "error",
+      message:
+        "One or more required properties are missing. Requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code",
+      code: 400,
+    });
+  }
+
+  if (
+    typeof first_name !== "string" ||
+    typeof last_name !== "string" ||
+    typeof phone !== "string" ||
+    typeof address_line1 !== "string" ||
+    typeof city_locality !== "string" ||
+    typeof state_province !== "string" ||
+    typeof postal_code !== "string" ||
+    typeof country_code !== "string"
+  ) {
+    errors.push({
+      status: "error",
+      message: "value of a required property is not of type string",
+      code: 400,
+    });
+  }
+  // if errors, return
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  const sql = `UPDATE OrderPost_ship_to
+SET first_name = ?, last_name = ?, phone = ?, address_line1 = ?, city_locality = ?, state_province = ?, 
+postal_code = ?, country_code = ?, email = ?, company_name = ?, address_line2 = ?, 
+address_line3 = ?, address_residential_indicator = ?
+WHERE ship_to_id = ?;`;
+
+  const values = [
+    first_name,
+    last_name,
+    phone,
+    address_line1,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+  ];
+  // use case:
+  // old address had address_line2, but new address does not
+  // if the variable is falsey, I need to insert null
+  // this is more of a hot-fix than an elegant solution
+  if (email && typeof email === "string") {
+    values.push(email);
+  } else values.push(null);
+
+  if (company_name && typeof company_name === "string") {
+    values.push(company_name);
+  } else values.push(null);
+
+  if (address_line2 && typeof address_line2 === "string") {
+    values.push(address_line2);
+  } else values.push(null);
+
+  if (address_line3 && typeof address_line3 === "string") {
+    values.push(address_line3);
+  } else values.push(null);
+
+  if (
+    address_residential_indicator === "yes" ||
+    address_residential_indicator === "no" ||
+    address_residential_indicator === "unknown"
+  ) {
+    values.push(address_residential_indicator);
+  } else values.push("unknown");
+
+  values.push(customerId);
+  // sql and values are formatted correctly now
+  // console.log(sql);
+  // console.log(values);
+
+  // if valid data, then INSERT
+
+  // actual logic goes here
+  // let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, values);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  getAddressById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        addressId,
+        customerId,
+      },
+    },
+    res
+  );
+};
+
 const deleteAddressById = async (req, res) => {
   // /:customerId/addresses/:addressId
   const customerId = +req.params.customerId;
@@ -746,5 +920,6 @@ module.exports = {
   verifyCustomerAddress,
   createCustomerAddress,
   getAddressById,
+  updateAddressById,
   deleteAddressById,
 };

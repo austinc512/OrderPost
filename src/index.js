@@ -43,11 +43,15 @@ app.use(express.json());
 
 app.use(function (req, res, next) {
   // Website we wish to allow content
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://order-post-client.vercel.app"
-  );
-  // res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+
+  // cloud
+  // res.setHeader(
+  //   "Access-Control-Allow-Origin",
+  //   "https://order-post-client.vercel.app"
+  // );
+
+  // local
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
 
   // Request methods you wish to allow
   res.setHeader("Access-Control-Allow-Methods", [

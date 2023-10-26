@@ -177,6 +177,8 @@ const createProduct = async (req, res) => {
 
   try {
     updatedResults = await db.querySync(sql, params);
+    console.log(`HERE GOD DAMN IT`);
+    console.log(updatedResults);
   } catch (err) {
     console.log(`INSERT into OrderPost_products failed:`);
     console.log(err);
@@ -198,6 +200,7 @@ const createProduct = async (req, res) => {
       });
     }
   }
+
   // if here, INSERT was successful
   console.log(
     `new product created, will call getProductById with productId ${updatedResults.insertId}`
@@ -291,6 +294,8 @@ const updateProduct = async (req, res) => {
         "description": "Description must be less than 150 characters."
     }
   */
+  // where is the validation that product_id corresponds to user_id?
+  // need to do this.
   let errors = [];
   const productId = +req.params.productId;
   const userId = req.userInfo.userId;

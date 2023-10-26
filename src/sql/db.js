@@ -66,7 +66,7 @@
 const mysql = require("mysql");
 require("dotenv").config();
 
-// Create a connection pool instead of a single connection
+// Create a connection pool
 const pool = mysql.createPool({
   connectionLimit: 100,
   host: process.env.DB_HOST,
@@ -89,6 +89,7 @@ pool.queryPromise = (sql, params) => {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
       if (err) {
+        console.log(`queryPromise REJECT`);
         reject(err);
         return;
       }
@@ -102,6 +103,8 @@ pool.queryPromise = (sql, params) => {
         connection.release(); // Release the connection back to the pool
 
         if (error) {
+          console.log(`connection.query REJECT`);
+          console.log(error);
           reject(error);
         } else {
           resolve(results);
@@ -120,6 +123,7 @@ pool.querySync = async (sql, params) => {
   } catch (err) {
     console.log("db.js catch block err:");
     console.log(err);
+    throw err;
   }
 };
 
