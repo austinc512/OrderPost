@@ -44,7 +44,8 @@ app.use(express.json());
 app.use(function (req, res, next) {
   // Website we wish to allow content
 
-  cloud;
+  // cloud -- don't uncomment this!!!!
+
   res.setHeader(
     "Access-Control-Allow-Origin",
     "https://order-post-client.vercel.app"
