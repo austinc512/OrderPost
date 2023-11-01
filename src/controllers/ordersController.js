@@ -738,25 +738,25 @@ const addOrderItem = async (req, res) => {
   // takes 1 item
   const userId = req.userInfo.userId;
   const orderId = +req.params.orderId;
-  const { productId, quantity } = req.body;
+  const { product_id, quantity } = req.body;
   const errors = [];
 
-  const isProductNaN = isNaN(productId);
+  const isProductNaN = isNaN(product_id);
   if (isProductNaN) {
     errors.push({
       status: "error",
-      message: "productId is not a number",
+      message: "product_id is not a number",
       code: 400,
     });
   }
   if (
     !isProductNaN &&
-    typeof productId === "number" &&
-    Math.trunc(productId) !== productId
+    typeof product_id === "number" &&
+    Math.trunc(product_id) !== product_id
   ) {
     errors.push({
       status: "error",
-      message: "productId must be an integer",
+      message: "product_id must be an integer",
       code: 400,
     });
   }
@@ -803,7 +803,7 @@ const addOrderItem = async (req, res) => {
     "SELECT * FROM OrderPost_products WHERE user_id = ? AND product_id = ?";
   let productResults;
   try {
-    productResults = await db.querySync(verifyProductSql, [userId, productId]);
+    productResults = await db.querySync(verifyProductSql, [userId, product_id]);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
@@ -830,7 +830,7 @@ const addOrderItem = async (req, res) => {
   // if here, product_id is valid and order corresponds to user
   // ready for insert
   const sql = `INSERT INTO OrderPost_order_items (order_id, product_id, quantity) VALUES (?, ?, ?)`;
-  const params = [orderId, productId, quantity];
+  const params = [orderId, product_id, quantity];
   let updatedResults;
   try {
     updatedResults = await db.querySync(sql, params);

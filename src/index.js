@@ -44,14 +44,14 @@ app.use(express.json());
 app.use(function (req, res, next) {
   // Website we wish to allow content
 
-  // cloud
-  // res.setHeader(
-  //   "Access-Control-Allow-Origin",
-  //   "https://order-post-client.vercel.app"
-  // );
+  cloud;
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://order-post-client.vercel.app"
+  );
 
   // local
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  // res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
 
   // Request methods you wish to allow
   res.setHeader("Access-Control-Allow-Methods", [

@@ -274,6 +274,166 @@ const createWarehouse = async (req, res) => {
   );
 };
 
+const updateWarehouse = async (req, res) => {
+  const userId = req.userInfo.userId;
+  const warehouseId = +req.params.warehouseId;
+  // these are the only two parameters I need to make the update
+  // authentication wouldn't allow for a fake userId to make it here
+  // there are no other joins necessary
+  // so I should be able to rely on res.affectedRows here, right?
+  const {
+    first_name,
+    last_name,
+    nick_name,
+    phone,
+    email,
+    company_name,
+    address_line1,
+    address_line2,
+    address_line3,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+    address_residential_indicator,
+  } = req.body;
+  const errors = [];
+
+  const checkNaN = isNaN(warehouseId);
+
+  if (checkNaN) {
+    errors.push({
+      status: "error",
+      message: "warehouseId is not a number",
+      code: 400,
+    });
+  }
+  if (
+    !first_name ||
+    !last_name ||
+    !nick_name ||
+    !phone ||
+    !address_line1 ||
+    !city_locality ||
+    !state_province ||
+    !postal_code ||
+    !country_code
+  ) {
+    errors.push({
+      status: "error",
+      message:
+        "One or more required properties are missing. Requirements: first_name, last_name, phone, address_line1, city_locality, state_province, postal_code, country_code",
+      code: 400,
+    });
+  }
+
+  if (
+    typeof first_name !== "string" ||
+    typeof last_name !== "string" ||
+    typeof nick_name !== "string" ||
+    typeof phone !== "string" ||
+    typeof address_line1 !== "string" ||
+    typeof city_locality !== "string" ||
+    typeof state_province !== "string" ||
+    typeof postal_code !== "string" ||
+    typeof country_code !== "string"
+  ) {
+    errors.push({
+      status: "error",
+      message: "value of a required property is not of type string",
+      code: 400,
+    });
+  }
+  if (errors.length) {
+    return res.status(400).json({ errors });
+  }
+
+  let sql = `UPDATE OrderPost_warehouses
+SET first_name = ?, last_name = ?, nick_name = ?, phone = ?, address_line1 = ?, city_locality = ?, 
+state_province = ?, postal_code = ?, country_code = ?, email = ?, company_name = ?, 
+address_line2 = ?, address_line3 = ?, address_residential_indicator = ?
+WHERE user_id = ? AND warehouse_id = ?;
+`;
+
+  const values = [
+    first_name,
+    last_name,
+    nick_name,
+    phone,
+    address_line1,
+    city_locality,
+    state_province,
+    postal_code,
+    country_code,
+  ];
+  // use case:
+  // old address had address_line2, but new address does not
+  // if the variable is falsey, I need to insert null
+  // this is more of a hot-fix than an elegant solution
+  if (email && typeof email === "string") {
+    values.push(email);
+  } else values.push(null);
+
+  if (company_name && typeof company_name === "string") {
+    values.push(company_name);
+  } else values.push(null);
+
+  if (address_line2 && typeof address_line2 === "string") {
+    values.push(address_line2);
+  } else values.push(null);
+
+  if (address_line3 && typeof address_line3 === "string") {
+    values.push(address_line3);
+  } else values.push(null);
+
+  if (
+    address_residential_indicator === "yes" ||
+    address_residential_indicator === "no" ||
+    address_residential_indicator === "unknown"
+  ) {
+    values.push(address_residential_indicator);
+  } else values.push("unknown");
+
+  values.push(userId, warehouseId);
+
+  let updatedResults;
+  try {
+    updatedResults = await db.querySync(sql, values);
+    if (updatedResults.affectedRows === 0) {
+      return res.status(400).json({
+        errors: {
+          status: "error",
+          message: "invalid warehouse_id",
+          code: 400,
+        },
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: {
+        status: "error",
+        message: "Internal Server Error",
+        code: 500,
+      },
+    });
+  }
+
+  getWarehouseById(
+    {
+      userInfo: {
+        userId: userId,
+      },
+      params: {
+        warehouseId,
+      },
+    },
+    // (getWarehouseById still needs access to updateWarehouse's res parameter)
+    res
+    // the response from getWarehouseById becomes the response of updateWarehouse
+  );
+};
+
 const deleteWarehouse = (req, res) => {
   const userId = req.userInfo.userId;
   const warehouseId = +req.params.warehouseId;
@@ -325,5 +485,6 @@ module.exports = {
   getWarehouseById,
   verifyWarehouse,
   createWarehouse,
+  updateWarehouse,
   deleteWarehouse,
 };

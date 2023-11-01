@@ -821,11 +821,8 @@ WHERE ship_to_id = ?;`;
   // console.log(values);
 
   // if valid data, then INSERT
-
-  // actual logic goes here
-  // let updatedResults;
   try {
-    updatedResults = await db.querySync(sql, values);
+    await db.querySync(sql, values);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
@@ -837,6 +834,7 @@ WHERE ship_to_id = ?;`;
     });
   }
 
+  // if SQL statement is successful, return the actual address.
   getAddressById(
     {
       userInfo: {

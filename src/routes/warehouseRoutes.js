@@ -20,6 +20,12 @@ router.post("/", auths.checkJWT, warehouseControllers.createWarehouse);
 
 router.post("/verify", auths.checkJWT, warehouseControllers.verifyWarehouse);
 
+router.patch(
+  "/:warehouseId",
+  auths.checkJWT,
+  warehouseControllers.updateWarehouse
+);
+
 router.delete(
   "/:warehouseId",
   auths.checkJWT,
