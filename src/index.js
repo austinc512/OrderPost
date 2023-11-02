@@ -18,25 +18,6 @@ const shipmentRoutes = require("./routes/shipmentsRoutes");
 // need to add cors for cross origin
 const cors = require("cors");
 
-// const setHeader = (req, res, next) => {
-//   // Website we wish to allow content
-//   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-
-//   // Request methods you wish to allow
-//   res.setHeader("Access-Control-Allow-Methods", "GET");
-
-//   //type of content we wish to allow
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "X-Requested-With,content-type"
-//   );
-
-//   // set to true if you need the website to include cookies in the request sent to the API (in case you use sessions)
-//   res.setHeader("Access-Control-Allow-Credentials", true);
-
-//   next();
-// };
-
 app.use(cors());
 
 app.use(express.json());
@@ -44,7 +25,7 @@ app.use(express.json());
 app.use(function (req, res, next) {
   // Website we wish to allow content
 
-  // cloud -- don't uncomment this!!!!
+  // cloud -- don't uncomment this you idiot!!!!
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -52,6 +33,7 @@ app.use(function (req, res, next) {
   );
 
   // local
+
   // res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
 
   // Request methods you wish to allow

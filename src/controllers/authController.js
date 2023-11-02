@@ -46,9 +46,9 @@ let registerUser = async (req, res) => {
   } catch (err) {
     console.log(err);
     if (err.code == "ER_DUP_ENTRY") {
-      res.status(400).json("username or email is not available.");
+      res.status(400).json({ error: "username or email is not available." });
     } else {
-      res.sendStatus(500);
+      res.sendStatus(500).json({ error: "internal server error" });
     }
     return;
   }
@@ -72,6 +72,8 @@ const login = async (req, res) => {
   // I'm kinda doing a callback hell here.
 
   db.query(sql, params, async (err, rows) => {
+    // console.log(rows);
+    // console.log(rows.length);
     if (err) {
       console.log("Could not find username, ", err);
       res.sendStatus(500);
@@ -80,7 +82,7 @@ const login = async (req, res) => {
       if (rows.length > 1) {
         // we have a real fucking problem on our hands
         console.log(`returned too many rows for username: ${username}`);
-        res.sendStatus(500);
+        res.sendStatus(500).json({ error: "internal server error" });
       } else if (rows.length == 0) {
         console.log(`not a valid username, ${username}`);
         // could just be username that's incorrect
@@ -99,8 +101,8 @@ const login = async (req, res) => {
           goodPass = await argon2.verify(pwHash, password); //returns bool
           // if it's good here, goodPass = true
         } catch (err) {
-          console.log(`failed to verify password, ${err}`);
-          res.status(400).send("invalid password");
+          console.log(`An error occurred while verifying password`);
+          res.status(500).json({ error: "internal server error" });
         }
 
         if (goodPass) {
@@ -110,29 +112,17 @@ const login = async (req, res) => {
             lastName: last_name,
             userId: user_id,
           };
-          //   res.status(200).send(token);
-          // JK, now we need to sign the token
           // JWT_SECRET
           const signedToken = jwt.sign(token, process.env.JWT_SECRET);
-          // testing
           res.json(signedToken);
-          // res.sendStatus(200);
-          // in a real project, you send this token to the frontend.
-          // and the frontend will store it in session storage, local storage, or a cookie
+          // later I might update this whole thing to use a cookie instead.
+          // this is good for now.
+        } else if (!goodPass) {
+          res.status(400).json({ error: "invalid password" });
         }
       }
     }
   });
-
-  // needs to be async function when I turn this on
-  //   let password_hash;
-  //   try {
-  //     password_hash = await argon2.hash(password);
-  //   } catch (err) {
-  //     console.log(err);
-  //     res.sendStatus(500);
-  //     return;
-  //   }
 };
 
 module.exports = {
