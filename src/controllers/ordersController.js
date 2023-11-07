@@ -1,7 +1,7 @@
 const db = require("../sql/db");
 
 const { validateOrderInfo } = require("../utils/orderUtils");
-const { createLabel } = require("../utils/shipEngineAPI");
+const { createLabel, rates } = require("../utils/shipEngineAPI");
 
 /*
 
@@ -829,6 +829,22 @@ const addOrderItem = async (req, res) => {
   }
   // if here, product_id is valid and order corresponds to user
   // ready for insert
+
+  /*
+  there's another refactor that could be done on the back end:
+  enforce uniqueness in the DB of orderId + productId
+  If it already exists, do not allow another insert statement.
+  
+  I have a bunch of other more important shit to do, so I can revisit this later.
+  The frontend will also check whether productId exists in current orderItems
+  So this optimization only helps if I allow external access to these endpoints in the first place.
+
+  Furthermore, these endpoints don't even allow batching of orderItems, so I could roll the above refactor into this work.
+
+  Maybe this is where I start only allowing POST requests and overriding the entire list of orderItems. 
+
+  food for thought...
+  */
   const sql = `INSERT INTO OrderPost_order_items (order_id, product_id, quantity) VALUES (?, ?, ?)`;
   const params = [orderId, product_id, quantity];
   let updatedResults;
@@ -1386,6 +1402,170 @@ const createShipment = async (req, res) => {
   res.json({ label_download: response.data.label_download.pdf });
 };
 
+const getRates = async (req, res) => {
+  const userId = req.userInfo.userId;
+  const {
+    service_code,
+    customer_id,
+    warehouse_id,
+    order_weight,
+    weight_units,
+    dimension_x,
+    dimension_y,
+    dimension_z,
+    dimension_units,
+    package_code,
+  } = req.body;
+
+  console.log(req.body);
+
+  // 1. customer_id must correspond to user_id
+  const customerSql = `SELECT c.user_id, s.* FROM OrderPost_ship_to s
+    JOIN OrderPost_customers c
+    ON s.customer_id = c.customer_id
+    WHERE c.user_id = ? AND s.customer_id = ?;`;
+  const customerParams = [userId, customer_id];
+  let customerAddressResults;
+  try {
+    customerAddressResults = await db.querySync(customerSql, customerParams);
+    // console.log(customerAddressResults.length);
+    if (customerAddressResults.length === 0) {
+      {
+        errors.push({
+          status: "error",
+          message: "invalid customer_id",
+          code: 400,
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
+    });
+  }
+  const targetShipTo = customerAddressResults[0];
+  console.log(targetShipTo);
+
+  // 2. warehouse_id must correspond to user_id
+  const warehouseSql =
+    "SELECT * FROM OrderPost_warehouses WHERE user_id = ? AND warehouse_id = ?";
+  const warehouseParams = [userId, warehouse_id];
+  let warehouseResults;
+  try {
+    warehouseResults = await db.querySync(warehouseSql, warehouseParams);
+    if (warehouseResults.length === 0) {
+      errors.push({
+        status: "error",
+        message: "invalid warehouse_id",
+        code: 400,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      errors: [
+        {
+          status: "error",
+          message: "Internal Server Error",
+          code: 500,
+        },
+      ],
+    });
+  }
+  const targetShipFrom = warehouseResults[0];
+  console.log(targetShipFrom);
+
+  // taking from ShipEngine documentation
+  // formatting to only get 1 rate object back from API
+  const shipment = {
+    rate_options: {
+      carrier_ids: [],
+      service_codes: [service_code],
+      package_types: [package_code],
+    },
+    shipment: {
+      validate_address: "no_validation",
+      ship_to: {
+        name: `${targetShipTo.first_name} ${targetShipTo.last_name}`,
+        phone: `${targetShipTo.phone}`,
+        company_name: `${targetShipTo.company_name}`,
+        address_line1: `${targetShipTo.address_line1}`,
+        address_line2: `${targetShipTo.address_line2}`,
+        address_line3: `${targetShipTo.address_line3}`,
+        city_locality: `${targetShipTo.city_locality}`,
+        state_province: `${targetShipTo.state_province}`,
+        postal_code: `${targetShipTo.postal_code}`,
+        country_code: `${targetShipTo.country_code}`,
+        address_residential_indicator: `${targetShipTo.address_residential_indicator}`,
+      },
+      ship_from: {
+        name: `${targetShipFrom.first_name} ${targetShipFrom.last_name}`,
+        phone: `${targetShipFrom.phone}`,
+        company_name: `${targetShipFrom.company_name}`,
+        address_line1: `${targetShipFrom.address_line1}`,
+        address_line2: `${targetShipFrom.address_line2}`,
+        address_line3: `${targetShipFrom.address_line3}`,
+        city_locality: `${targetShipFrom.city_locality}`,
+        state_province: `${targetShipFrom.state_province}`,
+        postal_code: `${targetShipFrom.postal_code}`,
+        country_code: `${targetShipFrom.country_code}`,
+        address_residential_indicator: `${targetShipFrom.address_residential_indicator}`,
+      },
+      packages: [
+        {
+          package_code: package_code,
+          weight: {
+            value: order_weight,
+            unit: weight_units,
+          },
+          dimensions: {
+            unit: dimension_units,
+            length: dimension_x,
+            width: dimension_y,
+            height: dimension_z,
+          },
+        },
+      ],
+    },
+  };
+  console.log(`LOGGING SHIPMENT`);
+  console.log(shipment);
+
+  const response = await rates(shipment);
+
+  if (response.status === 200) {
+    // some fine spaghetti
+    if (response.data.rate_response.rates.length === 0) {
+      console.log(`0 RATES RETURNED`);
+      console.log(response.data.rate_response);
+      console.log(response.data.rate_response.errors);
+      return res.status(400).json({ error: `no applicable rates were found.` });
+    }
+    const targetRate = response.data.rate_response.rates[0];
+    console.log(targetRate);
+    console.log(targetRate.shipping_amount.amount);
+    console.log(targetRate.insurance_amount.amount);
+    console.log(targetRate.confirmation_amount.amount);
+    console.log(targetRate.other_amount.amount);
+    const totalAmount =
+      targetRate.shipping_amount.amount +
+      targetRate.insurance_amount.amount +
+      targetRate.confirmation_amount.amount +
+      targetRate.other_amount.amount;
+    console.log({ totalAmount });
+    res.json({ totalAmount });
+  } else {
+    res.status(500).json(response);
+  }
+};
+
 module.exports = {
   listOrders,
   getOrderById,
@@ -1396,4 +1576,6 @@ module.exports = {
   addOrderItem,
   updateOrderItem,
   deleteOrderItem,
+  // rates
+  getRates,
 };

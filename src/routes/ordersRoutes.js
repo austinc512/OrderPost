@@ -47,4 +47,7 @@ router.post(
   ordersController.createShipment
 );
 
+// Rates
+router.post("/rates", auths.checkJWT, ordersController.getRates);
+
 module.exports = router;

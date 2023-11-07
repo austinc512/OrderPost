@@ -3,6 +3,10 @@ require("dotenv").config();
 
 const shipEngineKey = process.env.shipengine_api_key;
 
+const stamps_carrier_id = process.env.stamps_carrier_id;
+const ups_carrier_id = process.env.ups_carrier_id;
+const fedex_carrier_id = process.env.fedex_carrier_id;
+
 const instance = axios.create({
   baseURL: "https://api.shipengine.com",
   headers: { "API-Key": shipEngineKey },
@@ -42,9 +46,41 @@ const createLabel = async (shipment) => {
   }
 };
 
+const rates = async (shipment) => {
+  // testing errors
+  // shipment = {};
+
+  // need to add carrier_code to this
+  // shipment.rate_options.service_codes.includes
+
+  // note this logic is supposed to ONLY return 1 rate option
+  // this logic is only going to target 1 carrier code.
+  if (shipment.rate_options?.service_codes.includes("usps_priority_mail")) {
+    shipment.rate_options?.carrier_ids.push(stamps_carrier_id);
+  } else if (shipment.rate_options?.service_codes.includes("ups_ground")) {
+    shipment.rate_options?.carrier_ids.push(ups_carrier_id);
+  } else if (shipment.rate_options?.service_codes.includes("fedex_ground")) {
+    shipment.rate_options?.carrier_ids.push(fedex_carrier_id);
+  }
+  try {
+    const response = await instance.post("/v1/rates", shipment);
+    console.log(`LOGGING RESPONSE`);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.log(`error in getRate:`);
+    console.log(error);
+    console.log(`Isolating ShipEngine errors:`);
+    console.log(error.response.data);
+    // throw new Error(error.response.data);
+    return error.response.data;
+  }
+};
+
 module.exports = {
   validateAddress,
   createLabel,
+  rates,
 };
 
 /*
